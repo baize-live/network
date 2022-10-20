@@ -1,0 +1,16 @@
+# ninja log v5
+15	1534	6879595602150199	CMakeFiles/Server.dir/protocol/interface.cpp.obj	c16cfd177b3f7113
+4	1604	6879412740068936	CMakeFiles/Server.dir/Server.cpp.obj	b32bce6336ddd39f
+1961	2251	6879791049575921	Server.exe	2c1a288153b50b9b
+3	385	6879412039634469	CMakeFiles/Client.dir/Client.cpp.obj	779657274ab82a7b
+25	1583	6879595651529321	CMakeFiles/Client.dir/protocol/interface.cpp.obj	f358d0bbd7847428
+3	206	6879793143193151	Client.exe	36212dfb06bfb1b1
+44	609	6879793064285388	CMakeFiles/Client.dir/client/Client.cpp.obj	1f50f6650142412b
+6	1021	6879793068456256	CMakeFiles/Client.dir/client/View.cpp.obj	c7c23c489bfdbda0
+32	476	6879439402282646	CMakeFiles/Client.dir/client/function.cpp.obj	cc5da7a1556f2c44
+4	1961	6879791046712234	CMakeFiles/Server.dir/server/Server.cpp.obj	95a6a9fc60a65cd0
+3	347	6879462523153051	CMakeFiles/Client.dir/client/Windows.cpp.obj	84c44b2687a02778
+30	2569	6879793083955299	CMakeFiles/Client.dir/client/Control.cpp.obj	d05337ff71d120d
+13	299	6879722647125688	CMakeFiles/Client.dir/client/Model.cpp.obj	832e192df459f5ed
+4	424	6879781321694121	CMakeFiles/Server.dir/protocol/config.cpp.obj	d83f658b57652004
+37	972	6879781227645650	CMakeFiles/Client.dir/protocol/config.cpp.obj	fdb0546b1a6e7cbf

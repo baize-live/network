@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/client" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/client/Client.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/client/View.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/client/function.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/protocol" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/protocol/config.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/protocol/protocol.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/protocol/transport.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/server/Server.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/share.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/share.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/test.cpp" charset="GBK" />
+  </component>
+</project>
