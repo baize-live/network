@@ -72,12 +72,13 @@ public:
 //        WSAEFAULT   lpWSAData参数不是一个合法的指针
             return;
         }
-
+        cout << "WSAStartup  success.." << endl;
         // 创建socket
         server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (server == INVALID_SOCKET) {
             return;
         }
+        cout << "create socket.." << endl;
 
         // 创建套接字地址
         sockaddr_in server_addr{};
@@ -87,11 +88,16 @@ public:
         if (bind(server, (sockaddr *) &server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
             return;
         }
+        cout << "bind success.." << endl;
 
         // 开始监听
         if (listen(server, 10) == SOCKET_ERROR) {
             return;
         }
+        cout << "listen success.." << endl;
+
+        cout << "server host: 127.0.0.1" << endl;
+        cout << "server port: " << port << endl;
     }
 
     // 返回一个客户端连接

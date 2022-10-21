@@ -13,7 +13,7 @@ using namespace std;
 class protocol {
 protected:
     map<string, string> headers;
-    vector<char> data;
+    vector<char> body;
 
 public:
     protocol() = default;
@@ -23,9 +23,9 @@ public:
     }
 
     void set_text(const string &text) {
-        data.resize(0);
+        body.resize(0);
         for (const auto &ch: text) {
-            data.push_back(ch);
+            body.push_back(ch);
         }
     }
 
@@ -33,10 +33,10 @@ public:
 
     }
 
-    void set_data(const vector<char> &buf) {
-        data.resize(0);
+    void set_body(const vector<char> &buf) {
+        body.resize(0);
         for (const auto &ch: buf) {
-            data.push_back(ch);
+            body.push_back(ch);
         }
     }
 
@@ -77,9 +77,9 @@ public:
             }
         }
         // 解析data
-        data.resize(0);
+        body.resize(0);
         for (; it != buf.cend(); ++it) {
-            data.push_back(*it);
+            body.push_back(*it);
         }
     }
 
@@ -93,18 +93,22 @@ public:
 
     string get_text() {
         string text;
-        for (char i: data) {
+        for (char i: body) {
             text += i;
         }
         return text;
+    }
+
+    string get_author() {
+        return headers["author"];
     }
 
 //    FILE *get_file() {
 //
 //    }
 
-    vector<char> get_data() {
-        return data;
+    vector<char> get_body() {
+        return body;
     }
 
     vector<char> get_bytes() {
@@ -125,8 +129,8 @@ public:
         buf.push_back('\r');
         buf.push_back('\n');
 
-        // 遍历 data
-        for (const auto &ch: data) {
+        // 遍历 body
+        for (const auto &ch: body) {
             buf.push_back(ch);
         }
         return buf;
@@ -173,6 +177,14 @@ public:
         }
     }
 
+    string get_method() {
+        return headers["method"];
+    }
+
+    void set_method(string method) {
+        headers["method"] = method;
+    }
+
     Response request(const string &host, const short &port) {
         tcp_client tcp_client;
         bool is_connected = false;
@@ -188,7 +200,7 @@ public:
             response.set_bytes(in_buf);
         } else {
             // 网络异常
-            response.set_header("res", Res::Is_not_connected);
+            response.set_res(Res::Is_not_connected);
         }
         // 关闭连接
         tcp_client.tcp_close();

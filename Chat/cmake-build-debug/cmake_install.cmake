@@ -1,4 +1,4 @@
-# Install script for directory: D:/Code/C++/Network/Chat
+# Install script for directory: D:/Program/network/Chat
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "D:/Code/C++/Network/Chat/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "D:/Program/network/Chat/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

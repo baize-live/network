@@ -103,6 +103,7 @@ void View::show_chat_window(const string &username) {
 
     // ∑¢ÀÕ–≈œ¢
     while (true) {
+        cout << ">> ";
         string info;
         cin >> info;
         if (info == "exit_BaiZeChat") {

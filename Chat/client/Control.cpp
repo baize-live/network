@@ -155,7 +155,7 @@ void Control::handle_person_info(int num, const vector<string> &usernames) {
     } else {
         // 发起聊天
         Model::user_current_chat = usernames[num - 1];
-        View::show_chat_window(Model::username);
+        View::show_chat_window(Model::user_current_chat);
     }
 }
 
@@ -176,7 +176,7 @@ void Control::recv_user_info_thread() {
         if (res == Res::Success) {
             string text = resp.get_text();
             if (!text.empty()) {
-                cout << Model::user_current_chat << ": " << endl;
+                cout << endl << Model::user_current_chat << ": " << endl;
                 string time;
                 string info;
                 int flag = 0;
@@ -196,6 +196,7 @@ void Control::recv_user_info_thread() {
                         }
                     }
                 }
+                cout << ">> ";
             }
         } else if (res == Res::Is_not_connected) {
             cout << "服务器异常, 请稍后重试..." << endl;

@@ -1,4 +1,4 @@
-D:/Code/C++/Network/Chat/cmake-build-debug/CMakeFiles/Server.dir
-D:/Code/C++/Network/Chat/cmake-build-debug/CMakeFiles/Client.dir
-D:/Code/C++/Network/Chat/cmake-build-debug/CMakeFiles/edit_cache.dir
-D:/Code/C++/Network/Chat/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+D:/Program/network/Chat/cmake-build-debug/CMakeFiles/Server.dir
+D:/Program/network/Chat/cmake-build-debug/CMakeFiles/Client.dir
+D:/Program/network/Chat/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/Program/network/Chat/cmake-build-debug/CMakeFiles/rebuild_cache.dir

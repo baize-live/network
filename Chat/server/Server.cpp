@@ -41,7 +41,7 @@ class Server {
         list<message> message_list;
         message_list = user_message_list[username];
         user_message_list[username] = message_list;
-        cout << "用户 " << username << " 注册成功..." << endl;
+        cout << "user " << username << " register success..." << endl;
     }
 
     void handle_lookup_all_users(Request &req, Response &res) {
@@ -55,6 +55,7 @@ class Server {
         }
         username_str += "\r";
         res.set_text(username_str);
+        cout << "user " << self << " lookup_all_users success..." << endl;
     }
 
     void handle_send_info_to_user(Request &req, Response &res) {
@@ -64,6 +65,7 @@ class Server {
         msg.info = req.get_header("info");
         msg.time = req.get_header("time");
         user_message_list[msg.username_des].push_back(msg);
+        cout << msg.username_src << " send_info to " << msg.username_des << " success..." << endl;
     }
 
     void handle_recv_info_from_user(Request &req, Response &res) {
@@ -83,7 +85,11 @@ class Server {
             }
             ++it;
         }
-        res.set_text(text);
+
+        if (!text.empty()) {
+            res.set_text(text);
+            cout << msg.username_src << " recv_info from " << msg.username_des << " success..." << endl;
+        }
     }
 
     void handle_recv_info_from_all_user(Request &req, Response &res) {
@@ -96,6 +102,7 @@ class Server {
             ++it;
         }
         res.set_text(text);
+        cout << username << " recv_info_from_all_user success..." << endl;
     }
 
     // ================= Controller
@@ -105,10 +112,10 @@ class Server {
         Request request;
         request.set_bytes(in_buf);
         Response response;
-        if (request.get_header("author") != "BZ") {
+        if (request.get_author() != "BZ") {
             response.set_res(Res::Invalid);
         } else {
-            string method = request.get_header("method");
+            string method = request.get_method();
             // 默认成功
             response.set_res(Res::Success);
 
