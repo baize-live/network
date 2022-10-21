@@ -27,3 +27,5 @@ target/
 User*/
 
 .idea/
+
+cmake-build-debug/
