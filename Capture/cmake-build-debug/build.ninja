@@ -39,7 +39,7 @@ include CMakeFiles/rules.ninja
 #############################################
 # Logical path to working directory; prefix for absolute paths.
 
-cmake_ninja_workdir = D$:/Code/C++/Network/Capture/cmake-build-debug/
+cmake_ninja_workdir = D$:/Program/network/Capture/cmake-build-debug/
 # =============================================================================
 # Object build statements for EXECUTABLE target Capture
 
@@ -49,19 +49,19 @@ cmake_ninja_workdir = D$:/Code/C++/Network/Capture/cmake-build-debug/
 
 build cmake_object_order_depends_target_Capture: phony || CMakeFiles/Capture.dir
 
-build CMakeFiles/Capture.dir/main.cpp.obj: CXX_COMPILER__Capture_Debug D$:/Code/C++/Network/Capture/main.cpp || cmake_object_order_depends_target_Capture
+build CMakeFiles/Capture.dir/main.cpp.obj: CXX_COMPILER__Capture_Debug D$:/Program/network/Capture/main.cpp || cmake_object_order_depends_target_Capture
   DEP_FILE = CMakeFiles\Capture.dir\main.cpp.obj.d
   FLAGS = -g -std=gnu++11
-  INCLUDES = -ID:/Code/C++/Network/Capture/include
+  INCLUDES = -ID:/Program/network/Capture/include
   OBJECT_DIR = CMakeFiles\Capture.dir
   OBJECT_FILE_DIR = CMakeFiles\Capture.dir
   TARGET_COMPILE_PDB = CMakeFiles\Capture.dir\
   TARGET_PDB = Capture.pdb
 
-build CMakeFiles/Capture.dir/parse_frame.cpp.obj: CXX_COMPILER__Capture_Debug D$:/Code/C++/Network/Capture/parse_frame.cpp || cmake_object_order_depends_target_Capture
+build CMakeFiles/Capture.dir/parse_frame.cpp.obj: CXX_COMPILER__Capture_Debug D$:/Program/network/Capture/parse_frame.cpp || cmake_object_order_depends_target_Capture
   DEP_FILE = CMakeFiles\Capture.dir\parse_frame.cpp.obj.d
   FLAGS = -g -std=gnu++11
-  INCLUDES = -ID:/Code/C++/Network/Capture/include
+  INCLUDES = -ID:/Program/network/Capture/include
   OBJECT_DIR = CMakeFiles\Capture.dir
   OBJECT_FILE_DIR = CMakeFiles\Capture.dir
   TARGET_COMPILE_PDB = CMakeFiles\Capture.dir\
@@ -78,7 +78,7 @@ build CMakeFiles/Capture.dir/parse_frame.cpp.obj: CXX_COMPILER__Capture_Debug D$
 build Capture.exe: CXX_EXECUTABLE_LINKER__Capture_Debug CMakeFiles/Capture.dir/main.cpp.obj CMakeFiles/Capture.dir/parse_frame.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lPacket  -lwpcap  -lws2_32  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
-  LINK_PATH = -LD:/Code/C++/Network/Capture/lib
+  LINK_PATH = -LD:/Program/network/Capture/lib
   OBJECT_DIR = CMakeFiles\Capture.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
@@ -92,7 +92,7 @@ build Capture.exe: CXX_EXECUTABLE_LINKER__Capture_Debug CMakeFiles/Capture.dir/m
 # Utility command for edit_cache
 
 build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cmd.exe /C "cd /D D:\Code\C++\Network\Capture\cmake-build-debug && C:\Users\CodeXS\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\222.4345.21\bin\cmake\win\bin\cmake.exe -E echo "No interactive CMake dialog available.""
+  COMMAND = cmd.exe /C "cd /D D:\Program\network\Capture\cmake-build-debug && C:\Users\CodeXS\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\222.4345.21\bin\cmake\win\bin\cmake.exe -E echo "No interactive CMake dialog available.""
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -103,7 +103,7 @@ build edit_cache: phony CMakeFiles/edit_cache.util
 # Utility command for rebuild_cache
 
 build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cmd.exe /C "cd /D D:\Code\C++\Network\Capture\cmake-build-debug && C:\Users\CodeXS\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\222.4345.21\bin\cmake\win\bin\cmake.exe --regenerate-during-build -SD:\Code\C++\Network\Capture -BD:\Code\C++\Network\Capture\cmake-build-debug"
+  COMMAND = cmd.exe /C "cd /D D:\Program\network\Capture\cmake-build-debug && C:\Users\CodeXS\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\222.4345.21\bin\cmake\win\bin\cmake.exe --regenerate-during-build -SD:\Program\network\Capture -BD:\Program\network\Capture\cmake-build-debug"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -121,7 +121,7 @@ build Capture: phony Capture.exe
 # =============================================================================
 
 #############################################
-# Folder: D:/Code/C++/Network/Capture/cmake-build-debug
+# Folder: D:/Program/network/Capture/cmake-build-debug
 
 build all: phony Capture.exe
 

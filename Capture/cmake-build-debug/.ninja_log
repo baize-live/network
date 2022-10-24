@@ -1,12 +1,5 @@
 # ninja log v5
-3	1527	6871058952038397	CMakeFiles/Capture.dir/main.cpp.obj	4fc1999bee9e70af
-4	256	6877646038974347	build.ninja	eaa39fd7e412ed06
-1201	1339	6871060742577478	Capture.exe	ab96a0ac2a886e8a
-4	1200	6871060741251015	CMakeFiles/Capture.dir/parse_frame.cpp.obj	c8160ff988d6fdd7
-15	1418	6877647217559442	CMakeFiles/Capture.dir/parse_frame.cpp.obj	9d525fbfdf0fbbd5
 2	1422	6877647217798798	CMakeFiles/Capture.dir/main.cpp.obj	d533f16f52809c7c
-1422	1570	6877647219224970	Capture.exe	3838656a972ce13c
-4	1366	6877651535835591	CMakeFiles/Capture.dir/parse_frame.cpp.obj	9d525fbfdf0fbbd5
-1366	1557	6877651537601194	Capture.exe	3838656a972ce13c
-5	1265	6877697824825340	CMakeFiles/Capture.dir/parse_frame.cpp.obj	9d525fbfdf0fbbd5
+4	256	6882396467528828	build.ninja	eaa39fd7e412ed06
 1265	1461	6877697826840984	Capture.exe	3838656a972ce13c
+5	1265	6877697824825340	CMakeFiles/Capture.dir/parse_frame.cpp.obj	9d525fbfdf0fbbd5

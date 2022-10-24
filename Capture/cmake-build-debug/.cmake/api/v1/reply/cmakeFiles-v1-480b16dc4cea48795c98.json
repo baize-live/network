@@ -767,8 +767,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "D:/Code/C++/Network/Capture/cmake-build-debug",
-		"source" : "D:/Code/C++/Network/Capture"
+		"build" : "D:/Program/network/Capture/cmake-build-debug",
+		"source" : "D:/Program/network/Capture"
 	},
 	"version" : 
 	{

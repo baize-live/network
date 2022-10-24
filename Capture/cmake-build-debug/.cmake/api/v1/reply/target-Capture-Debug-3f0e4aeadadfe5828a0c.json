@@ -69,7 +69,7 @@
 			[
 				{
 					"backtrace" : 4,
-					"path" : "D:/Code/C++/Network/Capture/include"
+					"path" : "D:/Program/network/Capture/include"
 				}
 			],
 			"language" : "CXX",
@@ -103,7 +103,7 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "-LD:\\Code\\C++\\Network\\Capture\\lib",
+				"fragment" : "-LD:\\Program\\network\\Capture\\lib",
 				"role" : "libraryPath"
 			},
 			{

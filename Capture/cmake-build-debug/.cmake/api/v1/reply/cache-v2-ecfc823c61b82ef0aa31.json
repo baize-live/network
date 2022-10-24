@@ -15,7 +15,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/addr2line.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/addr2line.exe"
 		},
 		{
 			"name" : "CMAKE_AR",
@@ -31,7 +31,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/ar.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/ar.exe"
 		},
 		{
 			"name" : "CMAKE_BUILD_TYPE",
@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "d:/Code/C++/Network/Capture/cmake-build-debug"
+			"value" : "d:/Program/network/Capture/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -143,7 +143,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/g++.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/c++.exe"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER_AR",
@@ -159,7 +159,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/gcc-ar.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/gcc-ar.exe"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER_RANLIB",
@@ -175,7 +175,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/gcc-ranlib.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/gcc-ranlib.exe"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS",
@@ -287,7 +287,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/gcc.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/gcc.exe"
 		},
 		{
 			"name" : "CMAKE_C_COMPILER_AR",
@@ -303,7 +303,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/gcc-ar.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/gcc-ar.exe"
 		},
 		{
 			"name" : "CMAKE_C_COMPILER_RANLIB",
@@ -319,7 +319,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/gcc-ranlib.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/gcc-ranlib.exe"
 		},
 		{
 			"name" : "CMAKE_C_FLAGS",
@@ -431,7 +431,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/dlltool.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/dlltool.exe"
 		},
 		{
 			"name" : "CMAKE_EXECUTABLE_FORMAT",
@@ -623,7 +623,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "D:/Code/C++/Network/Capture"
+			"value" : "D:/Program/network/Capture"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -651,7 +651,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/ld.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/ld.exe"
 		},
 		{
 			"name" : "CMAKE_MAKE_PROGRAM",
@@ -759,7 +759,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/nm.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/nm.exe"
 		},
 		{
 			"name" : "CMAKE_NUMBER_OF_MAKEFILES",
@@ -787,7 +787,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/objcopy.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/objcopy.exe"
 		},
 		{
 			"name" : "CMAKE_OBJDUMP",
@@ -803,7 +803,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/objdump.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/objdump.exe"
 		},
 		{
 			"name" : "CMAKE_PLATFORM_INFO_INITIALIZED",
@@ -867,7 +867,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/ranlib.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/ranlib.exe"
 		},
 		{
 			"name" : "CMAKE_RC_COMPILER",
@@ -883,7 +883,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/windres.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/windres.exe"
 		},
 		{
 			"name" : "CMAKE_RC_COMPILER_WORKS",
@@ -991,7 +991,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/readelf.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/readelf.exe"
 		},
 		{
 			"name" : "CMAKE_ROOT",
@@ -1211,7 +1211,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/CodeXS/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/mingw/bin/strip.exe"
+			"value" : "C:/Users/CodeXS/Environment/C++/mingw64/bin/strip.exe"
 		},
 		{
 			"name" : "CMAKE_VERBOSE_MAKEFILE",
@@ -1239,7 +1239,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/Code/C++/Network/Capture/cmake-build-debug"
+			"value" : "D:/Program/network/Capture/cmake-build-debug"
 		},
 		{
 			"name" : "Capture_IS_TOP_LEVEL",
@@ -1263,7 +1263,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/Code/C++/Network/Capture"
+			"value" : "D:/Program/network/Capture"
 		}
 	],
 	"kind" : "cache",
