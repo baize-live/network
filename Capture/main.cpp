@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ctime>
 
 #include "pcap.h"
 #include "pcap-bpf.h"

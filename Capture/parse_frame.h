@@ -27,6 +27,8 @@ typedef struct IPDatagram_t {
     BYTE data[1460];   // 剩余数据
 } IPDatagram_t;
 
+#pragma pack()
+
 // 输出字节流
 void print_bytes(const byte *buf, int len);
 

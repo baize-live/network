@@ -1,0 +1,18 @@
+POST http://localhost:80/server
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="major"
+
+信息安全
+--WebAppBoundary--
+
+###
+POST http://localhost:80/server
+Accept: application/x-www-form-urlencoded
+
+###
+GET http://localhost:80/server/
+Accept: application/x-www-form-urlencoded
+
+###
