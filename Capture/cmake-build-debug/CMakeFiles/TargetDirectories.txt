@@ -1,3 +1,0 @@
-D:/Program/network/Capture/cmake-build-debug/CMakeFiles/Capture.dir
-D:/Program/network/Capture/cmake-build-debug/CMakeFiles/edit_cache.dir
-D:/Program/network/Capture/cmake-build-debug/CMakeFiles/rebuild_cache.dir

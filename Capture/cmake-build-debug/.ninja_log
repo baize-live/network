@@ -1,5 +1,0 @@
-# ninja log v5
-2	1422	6877647217798798	CMakeFiles/Capture.dir/main.cpp.obj	d533f16f52809c7c
-4	256	6883234196469276	build.ninja	eaa39fd7e412ed06
-1265	1461	6877697826840984	Capture.exe	3838656a972ce13c
-5	1265	6877697824825340	CMakeFiles/Capture.dir/parse_frame.cpp.obj	9d525fbfdf0fbbd5

@@ -151,7 +151,7 @@
  * Offset is always zero
  *
  * HIPPI is long-gone, and the source files found in an older version
- * of NetBSD don't appear to be in the main CVS branch, so we may never
+ * of NetBSD don't appear to be in the capture_package CVS branch, so we may never
  * see a capture with this link-layer type.
  */
 #if defined(__NetBSD__)
