@@ -22,8 +22,8 @@ struct IPV4_Datagram_Head_t {
     BYTE TTL;
     BYTE Protocol;      // 上层协议
     WORD Checksum;
-    BYTE SrcIP[4];      // 源IP地址
-    BYTE DesIP[4];      // 目的IP地址
+    DWORD SrcIP;        // 源IP地址
+    DWORD DesIP;      // 目的IP地址
 };
 
 // MAC帧 1514Bytes
@@ -42,13 +42,13 @@ struct IPV4_Datagram_t {
 struct ArpPacket_t {
     WORD Hardware_Type;         // 硬件类型
     WORD Protocol_Type;         // 协议类型
-    WORD Hardware_Addr_Size;    // 硬件地址长度
-    WORD Protocol_Addr_Size;    // 协议地址长度
+    BYTE Hardware_Addr_Size;    // 硬件地址长度
+    BYTE Protocol_Addr_Size;    // 协议地址长度
     WORD op;                    // 操作类型
     BYTE SrcMAC[6];             // 源MAC地址
-    BYTE SrcIP[4];              // 源IP地址
+    DWORD SrcIP;                // 源IP地址
     BYTE DesMAC[6];             // 目的MAC地址
-    BYTE DesIP[4];              // 目的IP地址
+    DWORD DesIP;                // 目的IP地址
 };
 
 #pragma pack()
@@ -87,7 +87,10 @@ void print_bytes(byte *buf, int len);
 // 解析报文
 void parse_message(byte *buf);
 
+// 拿到IP和MAC映射
+int get_arp_mac(byte *buf, DWORD DesIP);
+
 // ARP数据包
-void set_arp_message(byte *buf, int len);
+void set_arp_message(byte *buf, int len, byte *SrcMAC, DWORD SrcIP, DWORD DesIP);
 
 #endif //CAPTURE_STRUCT_H

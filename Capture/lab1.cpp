@@ -58,9 +58,16 @@ int main() {
     pcap_if_t *all_devs;
     int all_devs_num = get_all_dev(all_devs);
 
+    int one_dev_num = 0;
+    cout << "请输入要监听的网卡编号:";
+    cin >> one_dev_num;
+
     // 拿到想要监听的网卡
     pcap_if_t *one_dev;
-    get_one_dev(one_dev, all_devs, all_devs_num);
+    get_one_dev(one_dev, all_devs, all_devs_num, one_dev_num);
+
+    cout << "listening on ... 网卡信息如下: " << endl;
+    ifprint(one_dev);
 
     // 拿到指定网卡句柄
     pcap_t *ad_handle = get_ad_handle(one_dev, all_devs);

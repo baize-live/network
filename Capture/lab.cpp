@@ -97,11 +97,7 @@ int get_all_dev(pcap_if_t *&all_devs) {
 }
 
 // 拿到特定的网卡
-void get_one_dev(pcap_if_t *&one_dev, pcap_if_t *&all_devs, const int &all_devs_num) {
-    int one_dev_num = 0;
-    cout << "请输入要监听的网卡编号:";
-    cin >> one_dev_num;
-
+void get_one_dev(pcap_if_t *&one_dev, pcap_if_t *&all_devs, const int &all_devs_num, int one_dev_num) {
     // 超限处理
     if (one_dev_num < 1 || one_dev_num > all_devs_num) {
         cerr << "网卡编号超出限制 " << endl;
@@ -115,10 +111,6 @@ void get_one_dev(pcap_if_t *&one_dev, pcap_if_t *&all_devs, const int &all_devs_
     while (--one_dev_num) {
         one_dev = one_dev->next;
     }
-
-    cout << "listening on ... 网卡信息如下: " << endl;
-    ifprint(one_dev);
-
 }
 
 // 拿到指定网卡句柄
@@ -135,4 +127,4 @@ pcap_t *get_ad_handle(pcap_if_t *&one_dev, pcap_if_t *&all_devs) {
     pcap_freealldevs(all_devs);
 
     return ad_handle;
-};
+}

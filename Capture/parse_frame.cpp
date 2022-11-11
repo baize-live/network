@@ -11,11 +11,16 @@ void print_bytes(byte *buf, const int len) {
 }
 
 // 输出IP 192.168.1.1
-void print_ip(byte *IP_addr) {
-    printf("%d", IP_addr[0]);
-    for (int i = 1; i < 4; ++i) {
-        printf(".%d", IP_addr[i]);
-    }
+void print_ip(DWORD IP_addr) {
+    printf("%lu", IP_addr & 0xFF);
+    printf(".%lu", (IP_addr >> 8) & 0xFF);
+    printf(".%lu", (IP_addr >> 16) & 0xFF);
+    printf(".%lu", (IP_addr >> 24) & 0xFF);
+}
+
+// 输出MAC
+void print_mac(byte *mac) {
+    printf("%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 // 解析IP数据报
@@ -47,6 +52,19 @@ void parse_ip(IPV4_Datagram_t *ip_datagram) {
     cout << " 暂时不解析运输层协议" << endl;
 }
 
+// 解析ARP数据包
+void parse_arp(ArpPacket_t *arp_packet) {
+    cout << "开始解析ARP数据包...";
+    switch (htons(arp_packet->op)) {
+        case ARP_REQUEST:
+            cout << "ARP Request" << endl;
+            break;
+        case ARP_RESPONSE:
+            cout << "ARP Response" << endl;
+            break;
+    }
+}
+
 // 解析mac帧
 void parse_mac(MACFrame_t *mac_frame) {
     cout << "开始解析MAC帧...";
@@ -67,6 +85,12 @@ void parse_mac(MACFrame_t *mac_frame) {
             cout << "IPV6协议(当前只解析IPV4协议)" << endl;
             break;
         }
+        case ARP: {
+            cout << "ARP协议" << endl;
+            auto *arp_packet = (ArpPacket_t *) mac_frame->data;
+            parse_arp(arp_packet);
+            break;
+        }
         default:
             cout << "其他协议(当前只解析IPV4协议)" << endl;
             break;
@@ -77,4 +101,25 @@ void parse_mac(MACFrame_t *mac_frame) {
 void parse_message(byte *buf) {
     auto *mac_frame = (MACFrame_t *) buf;
     parse_mac(mac_frame);
+}
+
+int get_arp_mac(byte *buf, DWORD DesIP) {
+    auto *mac_frame = (MACFrame_t *) buf;
+    if (htons(mac_frame->mac_frame_head.FrameType) != ARP) {
+        return 1;
+    }
+    auto *arp_packet = (ArpPacket_t *) mac_frame->data;
+    if (htons(arp_packet->op) != ARP_RESPONSE) {
+        return 2;
+    }
+    if (arp_packet->SrcIP != DesIP) {
+        return 3;
+    }
+    printf("ARP res recv succeed ");
+    cout << "IP: ";
+    print_ip(DesIP);
+    cout << " MAC: ";
+    print_mac(arp_packet->SrcMAC);
+    cout << endl;
+    return 0;
 }
