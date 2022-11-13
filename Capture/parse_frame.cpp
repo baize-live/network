@@ -3,26 +3,6 @@
 
 using namespace std;
 
-// 输出字节流 0x68 0x00
-void print_bytes(byte *buf, const int len) {
-    for (int i = 0; i < len; i++) {
-        printf("%02x ", buf[i]);
-    }
-}
-
-// 输出IP 192.168.1.1
-void print_ip(DWORD IP_addr) {
-    printf("%lu", IP_addr & 0xFF);
-    printf(".%lu", (IP_addr >> 8) & 0xFF);
-    printf(".%lu", (IP_addr >> 16) & 0xFF);
-    printf(".%lu", (IP_addr >> 24) & 0xFF);
-}
-
-// 输出MAC
-void print_mac(byte *mac) {
-    printf("%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
-
 // 解析IP数据报
 void parse_ip(IPV4_Datagram_t *ip_datagram) {
     cout << "开始解析IP数据报...";
@@ -69,9 +49,9 @@ void parse_arp(ArpPacket_t *arp_packet) {
 void parse_mac(MACFrame_t *mac_frame) {
     cout << "开始解析MAC帧...";
     cout << endl << "\t源发MAC: ";
-    print_bytes(mac_frame->mac_frame_head.SrcMAC, sizeof(mac_frame->mac_frame_head.SrcMAC));
+    print_mac(mac_frame->mac_frame_head.SrcMAC);
     cout << endl << "\t目的MAC: ";
-    print_bytes(mac_frame->mac_frame_head.DesMAC, sizeof(mac_frame->mac_frame_head.DesMAC));
+    print_mac(mac_frame->mac_frame_head.DesMAC);
     cout << endl << "\tMAC帧类型: ";
 
     switch (htons(mac_frame->mac_frame_head.FrameType)) {
@@ -101,25 +81,4 @@ void parse_mac(MACFrame_t *mac_frame) {
 void parse_message(byte *buf) {
     auto *mac_frame = (MACFrame_t *) buf;
     parse_mac(mac_frame);
-}
-
-int get_arp_mac(byte *buf, DWORD DesIP) {
-    auto *mac_frame = (MACFrame_t *) buf;
-    if (htons(mac_frame->mac_frame_head.FrameType) != ARP) {
-        return 1;
-    }
-    auto *arp_packet = (ArpPacket_t *) mac_frame->data;
-    if (htons(arp_packet->op) != ARP_RESPONSE) {
-        return 2;
-    }
-    if (arp_packet->SrcIP != DesIP) {
-        return 3;
-    }
-    printf("ARP res recv succeed ");
-    cout << "IP: ";
-    print_ip(DesIP);
-    cout << " MAC: ";
-    print_mac(arp_packet->SrcMAC);
-    cout << endl;
-    return 0;
 }

@@ -81,16 +81,21 @@ enum ARP_Protocol_Type {
     ETH_IP = 0x0800,
 };
 
-// 输出字节流
-void print_bytes(byte *buf, int len);
-
+// ---------------------------------------------------------------- //
 // 解析报文
 void parse_message(byte *buf);
 
-// 拿到IP和MAC映射
-int get_arp_mac(byte *buf, DWORD DesIP);
-
+// ---------------------------------------------------------------- //
 // ARP数据包
 void set_arp_message(byte *buf, int len, byte *SrcMAC, DWORD SrcIP, DWORD DesIP);
+
+// ---------------------------------------------------------------- //
+// 输出字节流
+void print_bytes(byte *buf, int len);
+
+void print_ip(DWORD IP);
+
+void print_mac(byte *MAC);
+// ---------------------------------------------------------------- //
 
 #endif //CAPTURE_STRUCT_H
