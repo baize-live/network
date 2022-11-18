@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.23)
+project(Reliable)
+
+set(CMAKE_CXX_STANDARD 11)
+
+add_executable(lab3-1-server lab3-1-server.cpp UDP.h RTP.h)
+add_executable(lab3-1-client lab3-1-client.cpp UDP.h RTP.h FileUtil.h FileUtil.cpp)
+add_executable(Test test.cpp FileUtil.h FileUtil.cpp)
+
+target_link_libraries(lab3-1-server ws2_32)
+target_link_libraries(lab3-1-client ws2_32)
+
