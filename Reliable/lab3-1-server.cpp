@@ -38,15 +38,14 @@ int main() {
         }
         outFile.write(buf, len);
         sum += len;
-        if (sum == fileSize) {
+        if (sum >= fileSize) {
             break;
         }
     }
-    outFile.close();
-    server.close();
 
     cout << "接收成功 " << file.fileName() << endl;
 
+    outFile.close();
     server.close();
 
 }

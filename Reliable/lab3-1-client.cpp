@@ -4,7 +4,7 @@
 #include "protocol/protocol.h"
 #include "utils/FileUtil.h"
 
-const short port = 2001;
+const short port = 4000;
 const string host = "127.0.0.1";
 
 int main() {
@@ -54,14 +54,17 @@ int main() {
     char buf[1024];
     int len = File::fileSize(file.filePath());
     int now, sum = 0;
+    DWORD start = GetTickCount();
     while (sum < len) {
         now = (len - sum) < 1024 ? (len - sum) : 1024;
         inFile.read(buf, now);
         client.send(buf, now);
         sum += now;
     }
-
+    DWORD end = GetTickCount();
     cout << "发送成功 " << file.fileName() << endl;
+    cout << "用时: " << end - start << "ms" << endl;
+    cout << "平均吞吐率: " << len * 1.0 / (end - start) << endl;
 
     client.close();
 
