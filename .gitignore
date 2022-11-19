@@ -29,3 +29,7 @@ User*/
 .idea/
 
 cmake-build-debug/
+
+recv/
+
+send/
