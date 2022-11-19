@@ -1,8 +1,11 @@
-#include <thread>
-#include "RTP.h"
 #include <fstream>
 
+#include "protocol/RTP.h"
+#include "protocol/protocol.h"
+#include "utils/FileUtil.h"
+
 const short port = 2001;
+const int buffer_len = 1024;
 
 int main() {
     RTP server;
@@ -13,26 +16,37 @@ int main() {
     }
     cout << "server start success... " << endl;
 
+    char buf[buffer_len];
+    int len = server.recv(buf, buffer_len);
 
+    Request request;
+    request.set_bytes(buf, len);
+    string fileName = request.get_header("fileName");
+    int fileSize = stoi(request.get_header("fileSize"));
 
+    File file("../recv/" + fileName);
 
-    char buf[1024];
-    std::ofstream outFile("../f.png", std::ios::out | std::ios::binary | std::ios::app);
+    cout << "开始接收 " << file.fileName() << endl;
+
+    std::ofstream outFile(file.filePath(), std::ios::out | std::ios::binary | std::ios::app);
+
     int sum = 0;
-    int len;
     while (true) {
-        len = server.recv(buf, 1024);
+        len = server.recv(buf, buffer_len);
         if (len == -1) {
             break;
         }
         outFile.write(buf, len);
         sum += len;
-        if (sum == 1478193) {
+        if (sum == fileSize) {
             break;
         }
     }
     outFile.close();
     server.close();
-    Sleep(5000);
+
+    cout << "接收成功 " << file.fileName() << endl;
+
+    server.close();
 
 }

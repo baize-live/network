@@ -48,14 +48,11 @@ void strToken(const std::string &str, const char cSep, std::vector<std::string> 
     vTokenRes.push_back(str.substr(iPos));
 }
 
-File::File(const std::string &sFilePath) :
-        m_sFilePath(sFilePath) {
+File::File(const std::string &sFilePath) : m_sFilePath(sFilePath) {
     m_iIsFileOrDir = isFileOrDir(m_sFilePath);
 }
 
-File::~File() {
-
-}
+File::~File() = default;
 
 void File::setFilePath(const std::string &sFilePath) {
     this->m_sFilePath = sFilePath;

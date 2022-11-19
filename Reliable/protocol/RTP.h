@@ -1,12 +1,12 @@
 #ifndef RELIABLE_RTP_H
 #define RELIABLE_RTP_H
 
-#include <iostream>
+#include <mutex>
 #include <thread>
 #include <random>
-#include <mutex>
-
+#include <iostream>
 #include "winsock2.h"
+
 #include "UDP.h"
 
 using namespace std;
@@ -33,6 +33,7 @@ struct RTP_Datagram_t {
 
 #pragma pack()
 
+// 传输层协议 3.1
 class RTP {
     UDP *udp_ptr;
     // 表示该类是客户端还是服务器
@@ -86,21 +87,33 @@ class RTP {
         for (int i = 1; i < times; ++i) {
             temp += get_sum_check[i];
             if (temp > 0xFFFF) {
-                temp ^= 0xFFFF;
+                temp += (temp >> 16);
+                temp &= 0xFFFF;
             }
         }
-        return temp;
+        return temp ^ 0xFFFF;
     }
 
     // 检查校验码
     static bool check_sum_check(RTP_Datagram_t *RTP_Datagram) {
-        return true;
+        WORD *get_sum_check = (WORD *) RTP_Datagram;
+        int times = sizeof(RTP_Datagram_t) / sizeof(WORD);
+        DWORD temp = get_sum_check[0];
+        for (int i = 1; i < times; ++i) {
+            temp += get_sum_check[i];
+            if (temp > 0xFFFF) {
+                temp += (temp >> 16);
+                temp &= 0xFFFF;
+            }
+        }
+        return (temp & 0xFFFF) == 0xFFFF;
     }
 
     // 生成RTP_Datagram_t 报文
     RTP_Datagram_t *
     generate_RTP_Datagram(BYTE ACK, BYTE SYN, BYTE FIN, char *buf, int len, int &RTP_Datagram_len) const {
         auto *RTP_Datagram = new RTP_Datagram_t();
+        memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
         RTP_Datagram->send_number = send_number;
         RTP_Datagram->recv_number = recv_number;
         RTP_Datagram->flag.ACK = ACK;
@@ -127,7 +140,7 @@ class RTP {
     void send_again_thread(RTP_Datagram_t *RTP_Datagram, int len, bool &ack_flag) {
         DWORD start = GetTickCount();
         while (!ack_flag) {
-            if (GetTickCount() - start >= network_delay * 2) {
+            if (GetTickCount() - start >= network_delay * 5) {
                 udp_ptr->send((char *) RTP_Datagram, len, *addr_ptr);
                 start = GetTickCount();
                 cerr << "丢包 " << RTP_Datagram->send_number << " 重传... " << endl;
@@ -141,6 +154,7 @@ class RTP {
 
         // 将数据存到接收缓冲区
         while (isConnected) {
+            memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
             len = udp_ptr->recv((char *) RTP_Datagram, sizeof(RTP_Datagram_t), *addr_ptr);
             if (len != -1 && check_sum_check(RTP_Datagram)) {
                 // 考虑是不是重传
@@ -150,7 +164,7 @@ class RTP {
                     continue;
                 }
 
-                cout << "接收 " << RTP_Datagram->send_number << " 成功";
+                cout << "接收 " << RTP_Datagram->send_number << " 成功" << endl;
 
                 /* 将数据 放在接收缓冲区中 考虑缓冲区满的情况 */
 
@@ -231,20 +245,23 @@ class RTP {
             // 操作共享数据前加锁
             send_mutex.lock();
 
+            // 拷贝数据并发送
             copy(send_buf.begin(), send_buf.begin() + send_len, temp_send_buf);
-            auto *RTP_Datagram = generate_RTP_Datagram(0, 0, 0, temp_send_buf, send_len, len);
-            udp_ptr->send((char *) RTP_Datagram, len, *addr_ptr);
-
+            auto *RTP_Datagram_send = generate_RTP_Datagram(0, 0, 0, temp_send_buf, send_len, len);
+            udp_ptr->send((char *) RTP_Datagram_send, len, *addr_ptr);
 
             // 启动 定时器
             bool ack_flag = false;
-            thread timer(&RTP::send_again_thread, this, RTP_Datagram, len, ref(ack_flag));
+            thread timer(&RTP::send_again_thread, this, RTP_Datagram_send, len, ref(ack_flag));
             timer.detach();
 
+            auto *RTP_Datagram = new RTP_Datagram_t();
+            memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
             len = udp_ptr->recv((char *) RTP_Datagram, sizeof(RTP_Datagram_t), *addr_ptr);
 
-            // 收到ACK响应包
+            // 收到ACK响应包 清空 RTP_Datagram_send
             ack_flag = true;
+            delete RTP_Datagram_send;
 
             if (len == -1) {
                 delete RTP_Datagram;
@@ -259,7 +276,7 @@ class RTP {
                     send_mutex.unlock();
                     continue;
                 } else {
-                    cout << "发送" << RTP_Datagram->send_number << " 成功";
+                    cout << "发送" << RTP_Datagram->recv_number << " 成功" << endl;
                     // 调整收发数 以及 缓冲区
                     send_number += send_len;
                     copy(send_buf.begin() + send_len, send_buf.end(), send_buf.begin());
@@ -281,7 +298,7 @@ public:
         addr_ptr = nullptr;
         isConnected = false;
         windows_size = 1;
-        sleep_time = 5;
+        sleep_time = 0;
         network_delay = 10;
         send_number = rd() % 100;
         recv_number = 0;
@@ -321,8 +338,10 @@ public:
         if (reply_ack(0, 1, 0) == -1) {
             return -1;
         }
+        cout << "client 第一次握手 成功 " << endl;
 
         // 握手第二次
+        memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
         len = udp_ptr->recv((char *) RTP_Datagram, sizeof(RTP_Datagram_t), *addr_ptr);
         if (len == -1) {
             delete RTP_Datagram;
@@ -336,11 +355,13 @@ public:
         recv_buf_index_offset = RTP_Datagram->send_number;
         network_delay = (GetTickCount() - start) > network_delay ? (GetTickCount() - start) : network_delay;
         delete RTP_Datagram;
+        cout << "client 第二次握手 成功 " << endl;
 
         // 握手第三次
         if (reply_ack(1, 1, 0) == -1) {
             return -1;
         }
+        cout << "client 第三次握手 成功 " << endl;
 
         // 握手成功后, 启动独立线程用于发送数据
         isConnected = true;
@@ -360,6 +381,7 @@ public:
         auto *RTP_Datagram = new RTP_Datagram_t();
 
         // 握手第一次
+        memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
         len = udp_ptr->recv((char *) RTP_Datagram, sizeof(RTP_Datagram_t), *addr_ptr);
 
         if (len == -1) {
@@ -372,14 +394,17 @@ public:
         }
         recv_number = RTP_Datagram->send_number;
         recv_buf_index_offset = RTP_Datagram->send_number;
+        cout << "server 第一次握手 成功 " << endl;
 
         // 握手第二次
         DWORD start = GetTickCount();
         if (reply_ack(1, 1, 0) == -1) {
             return -1;
         }
+        cout << "server 第二次握手 成功 " << endl;
 
         // 握手第三次
+        memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
         len = udp_ptr->recv((char *) RTP_Datagram, sizeof(RTP_Datagram_t), *addr_ptr);
         if (len == -1) {
             delete RTP_Datagram;
@@ -391,6 +416,7 @@ public:
         }
         network_delay = (GetTickCount() - start) > network_delay ? (GetTickCount() - start) : network_delay;
         delete RTP_Datagram;
+        cout << "server 第二次握手 成功 " << endl;
 
         // 握手成功后, 启动独立线程用于接收数据
         isConnected = true;
@@ -441,6 +467,7 @@ public:
             if (GetTickCount() - start >= timeout) {
                 return -1;
             }
+            // TODO: 重写 避免缓冲区太小导致无法发送数据
             if ((send_buf.size() - send_buf_effective_index) < len) {
                 Sleep(sleep_time);
                 continue;
@@ -457,8 +484,22 @@ public:
         }
     }
 
+    int recv(vector<char> &buf, int timeout = INT32_MAX) {
+        int len = recv(temp_buf, buf.size(), timeout);
+        if (len != -1) {
+            copy(temp_buf, temp_buf + len, buf.begin());
+        }
+        return len;
+    }
+
+    int send(vector<char> &buf, int timeout = INT32_MAX) {
+        copy(buf.begin(), buf.end(), temp_buf);
+        return send(temp_buf, buf.size(), timeout);
+    }
+
     int close() {
         isConnected = false;
+        Sleep(sleep_time * 3);
         return 0;
     }
 

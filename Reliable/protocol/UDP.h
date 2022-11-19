@@ -5,6 +5,7 @@
 
 #include "winsock2.h"
 
+// UDP »ù´¡Ð­Òé
 class UDP {
 private:
     SOCKET udp_socket{};
