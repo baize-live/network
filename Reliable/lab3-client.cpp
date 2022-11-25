@@ -4,11 +4,11 @@
 #include "protocol/protocol.h"
 #include "utils/FileUtil.h"
 
-const short port = 4000;
+const short port = 2001;
 const string host = "127.0.0.1";
 
 int main() {
-    RTP client;
+    RTP_Client client;
     client.client();
     if (client.connect(host, port) != 0) {
         cout << "client start failure... " << endl;
@@ -66,6 +66,7 @@ int main() {
     cout << "用时: " << end - start << "ms" << endl;
     cout << "平均吞吐率: " << len * 1.0 / (end - start) << endl;
 
+    inFile.close();
     client.close();
 
 }

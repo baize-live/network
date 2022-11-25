@@ -157,7 +157,7 @@ public:
         headers["res"] = res;
     }
 
-    void response(RTP &server) {
+    void response(RTP_Server &server) {
         // 发送
         vector<char> out_buf = get_bytes();
         server.send(out_buf);
@@ -188,7 +188,7 @@ public:
     }
 
     // TODO: 现在服务端无响应
-    Response request(RTP &client) {
+    Response request(RTP_Client &client) {
         Response response;
         // 发送
         vector<char> out_buf = get_bytes();

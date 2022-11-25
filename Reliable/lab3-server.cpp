@@ -8,8 +8,9 @@ const short port = 2001;
 const int buffer_len = 1024;
 
 int main() {
-    RTP server;
+    RTP_Server server;
     server.server(port);
+    server.listen();
     if (server.accept() != 0) {
         cout << "server start failure... " << endl;
         return 0;
@@ -46,6 +47,5 @@ int main() {
     cout << "接收成功 " << file.fileName() << endl;
 
     outFile.close();
-    server.close();
 
 }
