@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 #include <iostream>
 #include "RTP.h"
@@ -14,6 +15,7 @@ class protocol {
 protected:
     map<string, string> headers;
     vector<char> body;
+    char temp_buf[DATA_LEN]{};
 
 public:
     protocol() = default;
@@ -154,13 +156,14 @@ public:
     }
 
     void set_res(string res) {
-        headers["res"] = res;
+        headers["res"] = std::move(res);
     }
 
     void response(RTP_Server &server) {
         // 发送
         vector<char> out_buf = get_bytes();
-        server.send(out_buf);
+        copy(out_buf.begin(), out_buf.end(), temp_buf);
+        server.send(temp_buf, (int) out_buf.size());
     }
 };
 
@@ -184,7 +187,7 @@ public:
     }
 
     void set_method(string method) {
-        headers["method"] = method;
+        headers["method"] = std::move(method);
     }
 
     // TODO: 现在服务端无响应
@@ -192,7 +195,8 @@ public:
         Response response;
         // 发送
         vector<char> out_buf = get_bytes();
-        client.send(out_buf);
+        copy(out_buf.begin(), out_buf.end(), temp_buf);
+        client.send(temp_buf, (int) out_buf.size());
         return response;
     }
 };

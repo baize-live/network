@@ -1,5 +1,5 @@
 #include "RTP.h"
-#include <memory>
+
 WORD RTP::generate_sum_check(RTP_Datagram_t *RTP_Datagram) {
     WORD *get_sum_check = (WORD *) RTP_Datagram;
     int times = sizeof(RTP_Datagram_t) / sizeof(WORD);
@@ -28,122 +28,144 @@ bool RTP::check_sum_check(RTP_Datagram_t *RTP_Datagram) {
     return (temp & 0xFFFF) == 0xFFFF;
 }
 
-int RTP::generate_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, char *buf, int len, BYTE ACK, BYTE SYN, BYTE FIN) const {
+int RTP::generate_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, char *buf, int len,
+                               BYTE ACK, BYTE SYN, BYTE FIN, DWORD number) const {
     memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
-    RTP_Datagram->send_number = send_number;
+    RTP_Datagram->send_number = number;
     RTP_Datagram->recv_number = recv_number;
     RTP_Datagram->flag.ACK = ACK;
     RTP_Datagram->flag.SYN = SYN;
     RTP_Datagram->flag.FIN = FIN;
     RTP_Datagram->windows_size = windows_size;
     memcpy(RTP_Datagram->data, buf, len);
-    // è®¡ç®—æ£€éªŒå’Œ
+    // ¼ÆËã¼ìÑéºÍ
     RTP_Datagram->sum_check = generate_sum_check(RTP_Datagram);
     return (int) sizeof(RTP_Datagram_t) - DATA_LEN + len;
 }
 
 int RTP::send_signals(RTP_Datagram_t *RTP_Datagram, byte ack, byte syn, byte fin) {
-    // å›åŒ…
-    int len = generate_RTP_Datagram(RTP_Datagram, temp_buf, 0, ack, syn, fin);
+    int len = generate_RTP_Datagram(RTP_Datagram, temp_buf, 0, ack, syn, fin, send_number);
     len = udp_ptr->send((char *) RTP_Datagram, len, *addr_ptr);
     return len;
 }
 
-void RTP_Server::recv_thread() {
-    // ç”³è¯· é¿å…å¾ªç¯ä¸­é‡å¤ç”³è¯·
-    auto *RTP_Datagram = new RTP_Datagram_t();
+int RTP::send_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, DWORD number, int begin, int length) {
+    int buf_end_2_begin = send_buf_size - begin;
+    if (buf_end_2_begin >= length) {
+        copy(send_buf.begin() + begin, send_buf.begin() + begin + length, temp_buf);
+    } else {
+        copy(send_buf.begin() + begin, send_buf.end(), temp_buf);
+        copy(send_buf.begin(), send_buf.begin() + length - buf_end_2_begin, temp_buf + buf_end_2_begin);
+    }
+    int len;
+    len = generate_RTP_Datagram(RTP_Datagram, temp_buf, length, 0, 0, 0, number);
+    len = udp_ptr->send((char *) RTP_Datagram, len, *addr_ptr);
+    cout << "send: " << number << endl;
 
-    // å°†æ•°æ®å­˜åˆ°æ¥æ”¶ç¼“å†²åŒº
+    return len;
+}
+
+void RTP_Server::recv_thread() {
+    // ÉêÇë ±ÜÃâÑ­»·ÖĞÖØ¸´ÉêÇë
+    auto RTP_Datagram = new RTP_Datagram_t();
+
+    // ½«Êı¾İ´æµ½½ÓÊÕ»º³åÇø
     while (Statu != Server_Connected_Close && Statu != Server_Unknown_Error) {
 
-        // åˆå§‹åŒ–çŠ¶æ€ç­‰å¾… accept
+        // ³õÊ¼»¯×´Ì¬µÈ´ı accept
         if (Statu == Server_init || Statu == Server_listen) {
             Sleep(sleep_time);
             continue;
         }
 
-        // æ¥æ”¶æ•°æ®
+        // ½ÓÊÕÊı¾İ
         memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
         int len = udp_ptr->recv((char *) RTP_Datagram, sizeof(RTP_Datagram_t), *addr_ptr);
 
-        // åšæ ¡éªŒ æ£€éªŒå‡ºé”™ç›´æ¥ä¸¢åŒ…
+        // ×öĞ£Ñé ¼ìÑé³ö´íÖ±½Ó¶ª°ü
         if (len == -1 || !check_sum_check(RTP_Datagram)) {
             continue;
         }
 
-        // è€ƒè™‘æ˜¯ä¸æ˜¯æ¡æ‰‹
+        // ¿¼ÂÇÊÇ²»ÊÇÎÕÊÖ
         if (RTP_Datagram->flag.SYN == 1) {
             if (RTP_Datagram->flag.ACK == 0) {
-                // é¿å…ç¬¬äºŒä¸ªæ¡æ‰‹åŒ…ä¸¢å¤±å é‡å¤åˆå§‹åŒ–
+                // ±ÜÃâµÚ¶ş¸öÎÕÊÖ°ü¶ªÊ§ºó ÖØ¸´³õÊ¼»¯
                 if (Statu == Server_accept) {
-                    // é€‰æ‹©è¾ƒå°çª—å£
+                    // Ñ¡Ôñ½ÏĞ¡´°¿Ú
                     windows_size = RTP_Datagram->windows_size < windows_size ?
                                    RTP_Datagram->windows_size : windows_size;
-                    // é‡è®¾ç¼“å†²åŒºå¤§å°
-                    send_buf.resize(windows_size * DATA_LEN * 2);
-                    recv_buf.resize(windows_size * DATA_LEN * 2);
-                    // é‡è®¾æ¥æ”¶åºå·
+                    // ÖØÉè»º³åÇø´óĞ¡
+                    send_buf_size = windows_size * DATA_LEN * 2;
+                    recv_buf_size = windows_size * DATA_LEN * 2;
+                    send_buf.resize(send_buf_size);
+                    recv_buf.resize(recv_buf_size);
+
+                    // ÖØÉè½ÓÊÕĞòºÅ
                     recv_number = RTP_Datagram->send_number;
-                    // é‡è®¾æ¥æ”¶åŸºå€
-                    index_offset = RTP_Datagram->send_number;
-                    // åˆå§‹åŒ–æ¥æ”¶ç¼“å†²ç´¢å¼•æœ‰æ•ˆå€¼
+                    // ÖØÉè½ÓÊÕ»ùÖ·
+                    base_index = RTP_Datagram->send_number;
+                    // ³õÊ¼»¯»º³åË÷ÒıÓĞĞ§Öµ
                     recv_buf_effective_index.emplace_back(0, 0);
                 }
                 Statu = Server_Shake_Hands_2;
-                // é¿å…å‘é€ç¡®è®¤æ—¶ ç­‰ä¸€ä¸ªç½‘ç»œå»¶æ—¶
+                // ±ÜÃâ·¢ËÍÈ·ÈÏÊ± µÈÒ»¸öÍøÂçÑÓÊ±
                 Shake_Hands_Send_Time = -1;
             } else if (RTP_Datagram->flag.ACK == 1) {
-                // ä¿®æ”¹ç½‘ç»œæ—¶å»¶
-                network_delay = GetTickCount() - Shake_Hands_Send_Time + 50;
+                // ĞŞ¸ÄÍøÂçÊ±ÑÓ
+                network_delay = GetTickCount() - Shake_Hands_Send_Time + 100;
                 Statu = Server_Connected;
+                isConnected = true;
             } else {
                 Statu = Server_Unknown_Error;
             }
             continue;
         }
 
-        // è€ƒè™‘æ˜¯ä¸æ˜¯æŒ¥æ‰‹
+        // ¿¼ÂÇÊÇ²»ÊÇ»ÓÊÖ
         if (RTP_Datagram->flag.FIN == 1) {
             if (RTP_Datagram->flag.ACK == 0) {
                 Statu = Server_Wave_Hands_2;
             } else if (RTP_Datagram->flag.ACK == 1) {
                 Statu = Server_Connected_Close;
+                isConnected = false;
             } else {
                 Statu = Server_Unknown_Error;
             }
             continue;
         }
 
-        // è€ƒè™‘æ˜¯ä¸æ˜¯é‡ä¼  TODOï¼š é‡æ–°è®¾è®¡ä¸€ä¸‹
-        if (RTP_Datagram->send_number < recv_number) {
-            // å›åŒ…
-//            reply_ack(1, 0, RTP_Datagram->flag.FIN);
+        // ¿¼ÂÇÊÇ²»ÊÇÖØ´«
+        if (RTP_Datagram->send_number < base_index) {
+            Flag flag{};
+            flag.ACK = 1;
+            signals_queue.push(flag);
             continue;
         }
 
-        // æ•°æ®æŠ¥æ–‡ è€ƒè™‘ç¼“å†²åŒºæ»¡çš„æƒ…å†µ
-        // æ•°æ®åŸŸçš„é•¿åº¦
+        // Êı¾İ±¨ÎÄ ¿¼ÂÇ»º³åÇøÂúµÄÇé¿ö
+        // Êı¾İÓòµÄ³¤¶È
         unsigned data_len = len - (sizeof(RTP_Datagram_t) - DATA_LEN);
-        // è·å¾—ç¼“å†²åŒºçš„èµ·å§‹ä½ç½®
+        // »ñµÃ»º³åÇøµÄÆğÊ¼Î»ÖÃ
         unsigned start, end;
         while (true) {
-            // æ“ä½œå…±äº«æ•°æ®å‰åŠ é”
+            // ²Ù×÷¹²ÏíÊı¾İÇ°¼ÓËø
             recv_mutex.lock();
 
-            start = RTP_Datagram->send_number - index_offset;
+            start = RTP_Datagram->send_number - base_index;
             end = start + data_len;
 
-            // ç¼“å†²åŒºå¯ä»¥æ”¾ä¸‹å°±è·³å‡º
-            if (end <= recv_buf.size()) {
+            // »º³åÇø¿ÉÒÔ·ÅÏÂ¾ÍÌø³ö
+            if (end <= recv_buf_size) {
                 break;
             }
-            // ç¼“å†²åŒºæ”¾ä¸ä¸‹å°±å¼€é”, ç­‰å¾…ä¸Šå±‚è°ƒç”¨
+            // »º³åÇø·Å²»ÏÂ¾Í¿ªËø, µÈ´ıÉÏ²ãµ÷ÓÃ
             recv_mutex.unlock();
             Sleep(sleep_time);
         }
-        // æ‹·è´æ•°æ®åŸŸåˆ°ç¼“å†²åŒº
+        // ¿½±´Êı¾İÓòµ½»º³åÇø
         copy(RTP_Datagram->data, RTP_Datagram->data + data_len, recv_buf.begin() + start);
-        // å°†æ–°çš„ç‰‡æ®µæ’å…¥ recv_buf_effective_index ä¸­
+        // ½«ĞÂµÄÆ¬¶Î²åÈë recv_buf_effective_index ÖĞ
         if (recv_buf_effective_index.size() == 1) {
             recv_buf_effective_index.emplace_back(pair<unsigned, unsigned>(start, end));
         } else {
@@ -158,7 +180,7 @@ void RTP_Server::recv_thread() {
                 }
             }
         }
-        // åˆå¹¶ recv_buf_effective_index ä¸­é‡å¤çš„ç´¢å¼•
+        // ºÏ²¢ recv_buf_effective_index ÖĞÖØ¸´µÄË÷Òı
         for (int i = 1; i < recv_buf_effective_index.size(); i++) {
             if (recv_buf_effective_index[i].first <= recv_buf_effective_index[i - 1].second) {
                 recv_buf_effective_index[i - 1].second = recv_buf_effective_index[i].second;
@@ -166,26 +188,28 @@ void RTP_Server::recv_thread() {
                 --i;
             }
         }
-        // æ¥æ”¶æ•°è°ƒæ•´
-        recv_number = index_offset + recv_buf_effective_index[0].second;
-        // æ“ä½œå…±äº«æ•°æ®åè§£é”
+        // ½ÓÊÕÊıµ÷Õû
+        recv_number = base_index + recv_buf_effective_index[0].second;
+        cout << "recv: " << recv_number << endl;
+        // ²Ù×÷¹²ÏíÊı¾İºó½âËø
         recv_mutex.unlock();
-        // å›åŒ…
-//        reply_ack(1, 0, 0);
-        cout << "æ¥æ”¶ " << recv_number << " æˆåŠŸ" << endl;
+        // »Ø°ü
+        Flag flag{};
+        flag.ACK = 1;
+        signals_queue.push(flag);
     }
 
-    // é‡Šæ”¾
+    // ÊÍ·Å
     delete RTP_Datagram;
 }
 
 void RTP_Server::send_thread() {
-    // ç”³è¯· é¿å…å¾ªç¯ä¸­é‡å¤ç”³è¯·
-    auto *RTP_Datagram = new RTP_Datagram_t();
+    // ÉêÇë ±ÜÃâÑ­»·ÖĞÖØ¸´ÉêÇë
+    auto RTP_Datagram = new RTP_Datagram_t();
 
     while (Statu != Server_Connected_Close && Statu != Server_Unknown_Error) {
 
-        // å…ˆçœ‹å½“å‰çŠ¶æ€
+        // ÏÈ¿´µ±Ç°×´Ì¬
         switch (Statu) {
             case Server_init:
             case Server_accept: {
@@ -193,7 +217,7 @@ void RTP_Server::send_thread() {
                 continue;
             }
             case Server_Shake_Hands_2: {
-                // æ”¶åˆ°æ¡æ‰‹æŠ¥æ–‡ å“åº”ç¡®è®¤
+                // ÊÕµ½ÎÕÊÖ±¨ÎÄ ÏìÓ¦È·ÈÏ
                 if (GetTickCount() - Shake_Hands_Send_Time > network_delay) {
                     send_signals(RTP_Datagram, 1, 1, 0);
                     Shake_Hands_Send_Time = GetTickCount();
@@ -201,7 +225,7 @@ void RTP_Server::send_thread() {
                 continue;
             }
             case Server_Wave_Hands_2: {
-                // æ”¶åˆ°æŒ¥æ‰‹æŠ¥æ–‡ å“åº”
+                // ÊÕµ½»ÓÊÖ±¨ÎÄ ÏìÓ¦
                 send_signals(RTP_Datagram, 1, 0, 1);
                 send_signals(RTP_Datagram, 0, 0, 1);
                 Sleep(network_delay);
@@ -211,69 +235,110 @@ void RTP_Server::send_thread() {
                 break;
         }
 
-        // åœ¨çœ‹ä¿¡å·é˜Ÿåˆ— (æ¥æ”¶æŠ¥æ–‡åçš„ACKåŠæ—¶å“åº”)
-        while (!signals_queue.empty()) {
-            // è·å–ä¿¡å·
-            Flag flag = signals_queue.front();
-            // å‘é€ä¿¡å·
-            int len = send_signals(RTP_Datagram, flag.ACK, flag.SYN, flag.FIN);
-            if (len == -1) {
-                Statu = Server_Unknown_Error;
-                break;
+        // Á¬½ÓÌ¬Ö»×öÕâÒ»¼şÊÂ
+        while (Statu == Server_Connected) {
+            // ÔÚ¿´ĞÅºÅ¶ÓÁĞ (½ÓÊÕ±¨ÎÄºóµÄACK¼°Ê±ÏìÓ¦)
+            while (!signals_queue.empty()) {
+                // »ñÈ¡ĞÅºÅ
+                Flag flag = signals_queue.front();
+                // ·¢ËÍĞÅºÅ
+                int len = send_signals(RTP_Datagram, flag.ACK, flag.SYN, flag.FIN);
+                if (len == -1) {
+                    Statu = Server_Unknown_Error;
+                    break;
+                }
+                signals_queue.pop();
             }
-            signals_queue.pop();
         }
-
     }
 
-    // é‡Šæ”¾
+    // ÊÍ·Å
+    delete RTP_Datagram;
+}
+
+void RTP_Client::resend_thread() {
+    // ÉêÇë ±ÜÃâÑ­»·ÖĞÖØ¸´ÉêÇë
+    auto RTP_Datagram = new RTP_Datagram_t();
+
+    while (Statu != Client_Connected_Close && Statu != Client_Unknown_Error) {
+        send_window_mutex.lock();
+        auto it = send_window.begin();
+        while (it != send_window.end()) {
+            if (it->flag && it == send_window.begin()) {
+                // »ùÖ·¸Ä±ä
+                add_index_offset(it->length);
+                // ÓĞĞ§Êı¾İÓò¿ªÊ¼¸Ä±ä
+                set_send_buf_effective_index_first(it->begin, it->length);
+                // Çå³ıÍ·
+                it = send_window.erase(it);
+                continue;
+            }
+
+            if (!it->flag && GetTickCount() - it->time > network_delay * 2) {
+                // ³¬Ê±ÖØ´«
+                send_mutex.lock();
+                cout << "resend ";
+                send_RTP_Datagram(RTP_Datagram, it->send_number, it->begin, it->length);
+                it->time = GetTickCount();
+                send_mutex.unlock();
+            }
+
+            ++it;
+        }
+        send_window_mutex.unlock();
+        Sleep(sleep_time);
+    }
+
+    // ÊÍ·Å
     delete RTP_Datagram;
 }
 
 void RTP_Client::recv_thread() {
-    // ç”³è¯· é¿å…å¾ªç¯ä¸­é‡å¤ç”³è¯·
-    auto *RTP_Datagram = new RTP_Datagram_t();
+    // ÉêÇë ±ÜÃâÑ­»·ÖĞÖØ¸´ÉêÇë
+    auto RTP_Datagram = new RTP_Datagram_t();
 
-    // å°†æ•°æ®å­˜åˆ°æ¥æ”¶ç¼“å†²åŒº
+    // ½«Êı¾İ´æµ½½ÓÊÕ»º³åÇø
     while (Statu != Client_Connected_Close && Statu != Client_Unknown_Error) {
 
-        // åˆå§‹åŒ–çŠ¶æ€ç­‰å¾… Connect
+        // ³õÊ¼»¯×´Ì¬µÈ´ı Connect
         if (Statu == Client_init) {
             Sleep(sleep_time);
             continue;
         }
 
-        // æ¥æ”¶æ•°æ®
+        // ½ÓÊÕÊı¾İ
         memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
         int len = udp_ptr->recv((char *) RTP_Datagram, sizeof(RTP_Datagram_t), *addr_ptr);
 
-        // åšæ ¡éªŒ æ£€éªŒå‡ºé”™ç›´æ¥ä¸¢åŒ…
+        // ×öĞ£Ñé ¼ìÑé³ö´íÖ±½Ó¶ª°ü
         if (len == -1 || !check_sum_check(RTP_Datagram)) {
             continue;
         }
 
-        // è€ƒè™‘æ˜¯ä¸æ˜¯æ¡æ‰‹
+        // ¿¼ÂÇÊÇ²»ÊÇÎÕÊÖ
         if (RTP_Datagram->flag.SYN == 1) {
-            // æ”¶åˆ° SYN ACK
+            // ÊÕµ½ SYN ACK
             if (RTP_Datagram->flag.ACK == 1) {
-                // é¿å…ç¬¬ä¸‰ä¸ªæ¡æ‰‹åŒ…ä¸¢å¤±å é‡å¤åˆå§‹åŒ–
+                // ±ÜÃâµÚÈı¸öÎÕÊÖ°ü¶ªÊ§ºó ÖØ¸´³õÊ¼»¯
                 if (Statu == Client_Shake_Hands_1) {
-                    // é€‰æ‹©è¾ƒå°çª—å£
+                    // Ñ¡Ôñ½ÏĞ¡´°¿Ú
                     windows_size = RTP_Datagram->windows_size < windows_size ?
                                    RTP_Datagram->windows_size : windows_size;
-                    // ä¿®æ”¹ç½‘ç»œæ—¶å»¶
-                    network_delay = GetTickCount() - Shake_Hands_Send_Time + 50;
-                    // é‡è®¾ç¼“å†²åŒºå¤§å°
-                    send_buf.resize(windows_size * DATA_LEN * 2);
-                    recv_buf.resize(windows_size * DATA_LEN * 2);
-                    // é‡è®¾æ¥æ”¶åºå·
+                    // ĞŞ¸ÄÍøÂçÊ±ÑÓ
+                    network_delay = GetTickCount() - Shake_Hands_Send_Time + 100;
+                    // ÖØÉè»º³åÇø´óĞ¡
+                    send_buf_size = windows_size * DATA_LEN * 2;
+                    recv_buf_size = windows_size * DATA_LEN * 2;
+                    send_buf.resize(send_buf_size);
+                    recv_buf.resize(recv_buf_size);
+                    // ÖØÉè½ÓÊÕĞòºÅ
                     recv_number = RTP_Datagram->send_number;
-                    // é‡è®¾æ¥æ”¶åŸºå€
-                    index_offset = RTP_Datagram->send_number;
-                    // åˆå§‹åŒ–æ¥æ”¶ç¼“å†²ç´¢å¼•æœ‰æ•ˆå€¼
+                    // ÖØÉè½ÓÊÕ»ùÖ·
+                    base_index = RTP_Datagram->send_number;
+                    // ³õÊ¼»¯»º³åË÷ÒıÓĞĞ§Öµ
                     recv_buf_effective_index.emplace_back(0, 0);
                 }
-                // çŠ¶æ€è½¬ç§»
+                // ×´Ì¬×ªÒÆ
                 Statu = Client_Shake_Hands_3;
             } else {
                 Statu = Client_Unknown_Error;
@@ -281,10 +346,10 @@ void RTP_Client::recv_thread() {
             continue;
         }
 
-        // è€ƒè™‘æ˜¯ä¸æ˜¯æŒ¥æ‰‹
+        // ¿¼ÂÇÊÇ²»ÊÇ»ÓÊÖ
         if (RTP_Datagram->flag.FIN == 1) {
             if (RTP_Datagram->flag.ACK == 1) {
-                // TODO: æŒ¥æ‰‹ç¡®è®¤ å•¥ä¹Ÿä¸åš
+                // TODO: »ÓÊÖÈ·ÈÏ É¶Ò²²»×ö
             } else if (RTP_Datagram->flag.ACK == 0) {
                 Statu = Client_Wave_Hands_3;
             } else {
@@ -293,84 +358,43 @@ void RTP_Client::recv_thread() {
             continue;
         }
 
-        // è€ƒè™‘æ˜¯ä¸æ˜¯ç¡®è®¤ TODOï¼šè°ƒæ•´çª—å£
+        // ¿¼ÂÇÊÇ²»ÊÇÈ·ÈÏÊı¾İ
         if (RTP_Datagram->flag.ACK == 1) {
+            if (RTP_Datagram->recv_number <= base_index) {
+                continue;
+            }
+            send_window_mutex.lock();
+            for (auto &it: send_window) {
+                if (it.send_number + it.length <= RTP_Datagram->recv_number) {
+                    it.flag = true;
+                } else {
+                    break;
+                }
+            }
+            send_window_mutex.unlock();
             continue;
         }
 
-//        // å°†æ•°æ® æ”¾åœ¨æ¥æ”¶ç¼“å†²åŒºä¸­ è€ƒè™‘ç¼“å†²åŒºæ»¡çš„æƒ…å†µ
-//        // æ•°æ®åŸŸçš„é•¿åº¦
-//        unsigned data_len = len - (sizeof(RTP_Datagram_t) - DATA_LEN);
-//        // è·å¾—ç¼“å†²åŒºçš„èµ·å§‹ä½ç½®
-//        unsigned start, end;
-//        while (true) {
-//            // æ“ä½œå…±äº«æ•°æ®å‰åŠ é”
-//            recv_mutex.lock();
-//
-//            start = RTP_Datagram->send_number - index_offset;
-//            end = start + data_len;
-//
-//            // ç¼“å†²åŒºå¯ä»¥æ”¾ä¸‹å°±è·³å‡º
-//            if (end <= recv_buf.size()) {
-//                break;
-//            }
-//            // ç¼“å†²åŒºæ”¾ä¸ä¸‹å°±å¼€é”, ç­‰å¾…ä¸Šå±‚è°ƒç”¨
-//            recv_mutex.unlock();
-//            Sleep(sleep_time);
-//        }
-//        // æ‹·è´æ•°æ®åŸŸåˆ°ç¼“å†²åŒº
-//        copy(RTP_Datagram->data, RTP_Datagram->data + data_len, recv_buf.begin() + start);
-//        // å°†æ–°çš„ç‰‡æ®µæ’å…¥ recv_buf_effective_index ä¸­
-//        if (recv_buf_effective_index.size() == 1) {
-//            recv_buf_effective_index.emplace_back(pair<unsigned, unsigned>(start, end));
-//        } else {
-//            for (int i = 1; i < recv_buf_effective_index.size(); i++) {
-//                if (start >= recv_buf_effective_index[i - 1].second
-//                    && end <= recv_buf_effective_index[i].first) {
-//                    recv_buf_effective_index.insert(
-//                            recv_buf_effective_index.begin() + i,
-//                            pair<unsigned, unsigned>(start, end)
-//                    );
-//                    break;
-//                }
-//            }
-//        }
-//        // åˆå¹¶ recv_buf_effective_index ä¸­é‡å¤çš„ç´¢å¼•
-//        for (int i = 1; i < recv_buf_effective_index.size(); i++) {
-//            if (recv_buf_effective_index[i].first <= recv_buf_effective_index[i - 1].second) {
-//                recv_buf_effective_index[i - 1].second = recv_buf_effective_index[i].second;
-//                recv_buf_effective_index.erase(recv_buf_effective_index.begin() + i);
-//                --i;
-//            }
-//        }
-//        // æ¥æ”¶æ•°è°ƒæ•´
-//        recv_number = index_offset + recv_buf_effective_index[0].second;
-//        // æ“ä½œå…±äº«æ•°æ®åè§£é”
-//        recv_mutex.unlock();
-//        // å›åŒ…
-////        reply_ack(1, 0, 0);
-//        cout << "æ¥æ”¶ " << recv_number << " æˆåŠŸ" << endl;
+        // TODO: ÆäËûÇé¿öÄ¿Ç°²»×ö´¦Àí
     }
 
-    // é‡Šæ”¾
+    // ÊÍ·Å
     delete RTP_Datagram;
 }
 
 void RTP_Client::send_thread() {
-    // ç”³è¯· é¿å…å¾ªç¯ä¸­é‡å¤ç”³è¯·
+    // ÉêÇë ±ÜÃâÑ­»·ÖĞÖØ¸´ÉêÇë
     auto RTP_Datagram = new RTP_Datagram_t();
 
-    // å°†å‘é€ç¼“å†²åŒºçš„æ•°æ®å‘é€å‡ºå»
     while (Statu != Client_Connected_Close && Statu != Client_Unknown_Error) {
-
-        // å…ˆçœ‹å½“å‰çŠ¶æ€
+        // ÏÈ¿´µ±Ç°×´Ì¬
         switch (Statu) {
             case Client_init: {
                 Sleep(sleep_time);
                 continue;
             }
             case Client_Shake_Hands_1: {
-                // å‘é€æ¡æ‰‹ é¿å…ç¬¬ä¸€ä¸ªåŒ…ä¸¢å¤±
+                // ·¢ËÍÎÕÊÖ ±ÜÃâµÚÒ»¸ö°ü¶ªÊ§
                 if (GetTickCount() - Shake_Hands_Send_Time > network_delay) {
                     send_signals(RTP_Datagram, 0, 1, 0);
                     Shake_Hands_Send_Time = GetTickCount();
@@ -378,19 +402,22 @@ void RTP_Client::send_thread() {
                 continue;
             }
             case Client_Shake_Hands_3: {
-                // å‘é€æ¡æ‰‹ç¡®è®¤
+                // ·¢ËÍÎÕÊÖÈ·ÈÏ
                 send_signals(RTP_Datagram, 1, 1, 0);
                 Statu = Client_Connected;
+                isConnected = true;
+                thread_resend = new thread(&RTP_Client::resend_thread, this);
+                thread_resend->detach();
                 continue;
             }
             case Client_Wave_Hands_1: {
-                // å‘é€æŒ¥æ‰‹
+                // ·¢ËÍ»ÓÊÖ
                 send_signals(RTP_Datagram, 0, 0, 1);
                 Sleep(network_delay);
                 continue;
             }
             case Client_Wave_Hands_3: {
-                // å‘é€æŒ¥æ‰‹ç¡®è®¤
+                // ·¢ËÍ»ÓÊÖÈ·ÈÏ
                 send_signals(RTP_Datagram, 1, 0, 1);
                 Statu = Client_Wave_Hands_5;
                 Sleep(network_delay * 2);
@@ -398,75 +425,57 @@ void RTP_Client::send_thread() {
             }
             case Client_Wave_Hands_5: {
                 Statu = Client_Connected_Close;
+                isConnected = false;
                 continue;
             }
             default:
                 break;
         }
 
-        // åœ¨çœ‹ä¿¡å·é˜Ÿåˆ— TODO: ç°åœ¨åº”è¯¥ä¸ä¼šæœ‰ä¿¡å· å› ä¸ºæ˜¯å•å‘ä¼ é€’
-        while (!signals_queue.empty()) {
-            // è·å–ä¿¡å·
-            Flag flag = signals_queue.front();
-            // å‘é€ä¿¡å·
-            int len = send_signals(RTP_Datagram, flag.ACK, flag.SYN, flag.FIN);
-            if (len == -1) {
-                Statu = Client_Unknown_Error;
-                break;
-            }
-            signals_queue.pop();
+        // ÔÙ¿´ÓĞÎŞ´°¿Ú
+        while (send_window.size() == windows_size) {
+            Sleep(sleep_time);
         }
 
-//        int send_len = (send_buf_effective_index < DATA_LEN) ? (int) send_buf_effective_index : DATA_LEN;
-//
-//        if (send_len == 0) {
-//            Sleep(sleep_time);
-//            continue;
-//        }
-//
-//        // æ“ä½œå…±äº«æ•°æ®å‰åŠ é”
-//        send_mutex.lock();
-//
-//        // æ‹·è´æ•°æ®å¹¶å‘é€
-//        copy(send_buf.begin(), send_buf.begin() + send_len, temp_buf);
-//
-//        int len;
-//        len = generate_RTP_Datagram(RTP_Datagram, temp_buf, send_len, 0, 0, 0);
-//        len = udp_ptr->send((char *) RTP_Datagram, len, *addr_ptr);
+        send_mutex.lock();
 
-//        // å¯åŠ¨ å®šæ—¶å™¨
-//        bool ack_flag = false;
-//        thread timer(&RTP_Client::send_again_thread, this, RTP_Datagram_send, len, ref(ack_flag));
-//        timer.detach();
-//
-//        auto *RTP_Datagram = new RTP_Datagram_t();
-//        memset(RTP_Datagram, 0, sizeof(RTP_Datagram_t));
-//        len = udp_ptr->recv((char *) RTP_Datagram, sizeof(RTP_Datagram_t), *addr_ptr);
-//
-//        // æ”¶åˆ°ACKå“åº”åŒ… æ¸…ç©º RTP_Datagram_send
-//        ack_flag = true;
-//        delete RTP_Datagram_send;
-//
-//        if (len == -1 || !check_sum_check(RTP_Datagram)
-//            || RTP_Datagram->flag.ACK != 1
-//            || RTP_Datagram->recv_number != send_number + send_len) {
-//            delete RTP_Datagram;
-//            // æ“ä½œå…±äº«æ•°æ®åè§£é”
-//            send_mutex.unlock();
-//            continue;
-//        } else {
-//            // è°ƒæ•´æ”¶å‘æ•° ä»¥åŠ ç¼“å†²åŒº
-//            send_number += send_len;
-//            copy(send_buf.begin() + send_len, send_buf.end(), send_buf.begin());
-//            send_buf_effective_index -= send_len;
-//
-//            delete RTP_Datagram;
-//            // æ“ä½œå…±äº«æ•°æ®åè§£é”
-//            send_mutex.unlock();
-//        }
-//        cout << "å‘é€" << send_number << " æˆåŠŸ" << endl;
+        // ×¼±¸·¢ËÍÊı¾İ
+        int effective_len = get_effective_index_len() - (get_send_number() - get_base_index());
+        int send_len = (effective_len < DATA_LEN) ? effective_len : DATA_LEN;
+
+        // »º³åÇøÎŞÊı¾İ
+        if (send_len <= 0) {
+            send_mutex.unlock();
+            Sleep(sleep_time);
+            continue;
+        }
+
+        // ·¢ËÍÊı¾İ
+        int temp_send_number = get_send_number();
+        int temp_send_buf_begin = get_send_buf_effective_index_first() + (get_send_number() - get_base_index());
+        if (temp_send_buf_begin >= send_buf_size) {
+            temp_send_buf_begin -= send_buf_size;
+        }
+
+        send_RTP_Datagram(RTP_Datagram, temp_send_number, temp_send_buf_begin, send_len);
+        // ·¢ËÍÊıÔö¼Ó
+        add_send_number(send_len);
+
+        send_mutex.unlock();
+
+        // Ìí¼Ó´°¿Ú
+        Attribute attribute{};
+        attribute.time = GetTickCount();
+        attribute.flag = false;
+        attribute.length = send_len;
+        attribute.send_number = temp_send_number;
+        attribute.begin = temp_send_buf_begin;
+        // ´°¿ÚËø
+        send_window_mutex.lock();
+        send_window.push_back(attribute);
+        send_window_mutex.unlock();
     }
 
-    // é‡Šæ”¾
+    // ÊÍ·Å
     delete RTP_Datagram;
 }

@@ -4,8 +4,9 @@
 #include "protocol/protocol.h"
 #include "utils/FileUtil.h"
 
-const short port = 2001;
+const short port = 4000;
 const string host = "127.0.0.1";
+const int buffer_len = 1440;
 
 int main() {
     RTP_Client client;
@@ -26,6 +27,7 @@ int main() {
     cin >> fileNum;
     if (fileNum > fileList.size()) {
         cout << "文件选择失败 " << endl;
+        return 0;
     }
     auto it = fileList.begin();
     for (; it != fileList.end(); ++it) {
@@ -35,7 +37,7 @@ int main() {
     }
     File file = **it;
 
-    cout << "开始发送 " << file.fileName() << endl;
+    cout << "开始发送 " << file.fileName() << " 大小: " << file.fileSize() << endl;
 
     // 先发送 文件大小和文件名
     Request request;
@@ -51,22 +53,25 @@ int main() {
         inFile.close();
     }
 
-    char buf[1024];
+    char buf[buffer_len];
     int len = File::fileSize(file.filePath());
     int now, sum = 0;
     DWORD start = GetTickCount();
     while (sum < len) {
-        now = (len - sum) < 1024 ? (len - sum) : 1024;
+        now = (len - sum) < buffer_len ? (len - sum) : buffer_len;
         inFile.read(buf, now);
         client.send(buf, now);
         sum += now;
     }
+
     DWORD end = GetTickCount();
     cout << "发送成功 " << file.fileName() << endl;
     cout << "用时: " << end - start << "ms" << endl;
     cout << "平均吞吐率: " << len * 1.0 / (end - start) << endl;
 
     inFile.close();
-    client.close();
+    if (client.close() == 0) {
+        cout << "挥手成功" << endl;
+    }
 
 }

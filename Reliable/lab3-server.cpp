@@ -4,8 +4,8 @@
 #include "protocol/protocol.h"
 #include "utils/FileUtil.h"
 
-const short port = 2001;
-const int buffer_len = 1024;
+const short port = 2000;
+const int buffer_len = 1440;
 
 int main() {
     RTP_Server server;
@@ -27,7 +27,7 @@ int main() {
 
     File file("../recv/" + fileName);
 
-    cout << "开始接收 " << file.fileName() << endl;
+    cout << "开始接收 " << file.fileName() << " 大小: " << fileSize << endl;
 
     std::ofstream outFile(file.filePath(), std::ios::out | std::ios::binary | std::ios::app);
 
@@ -35,6 +35,7 @@ int main() {
     while (true) {
         len = server.recv(buf, buffer_len);
         if (len == -1) {
+//            cout << "Error: " << -1 << endl;
             break;
         }
         outFile.write(buf, len);
