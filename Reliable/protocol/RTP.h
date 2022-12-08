@@ -12,28 +12,44 @@
 #include "UDP.h"
 
 using namespace std;
-#define DATA_LEN 1440
-#define buf_len 4096
-#define DEBUG 1
+#define DATA_LEN 10000
 
 #pragma pack(1)        // 进入字节对齐方式
 
-// 1 Bytes
-struct Flag {
+// 1 Byte
+struct RTP_Flag_t {
     BYTE ACK: 1;    // 确认
     BYTE SYN: 1;    // 建立连接
     BYTE FIN: 1;    // 断开连接
     BYTE RES1: 5;   // 保留
 };
 
-// 1452 Bytes
-struct RTP_Datagram_t {
-    DWORD send_number;   // 发送序号
-    DWORD recv_number;   // 接收序号
-    WORD sum_check;      // 校验和
-    Flag flag;           // 标志位
-    BYTE windows_size;   // 窗口大小
+// 12 Bytes
+struct RTP_Head_t {
+    DWORD send_num;      // 发送序号
+    DWORD recv_num;      // 接收序号
+    WORD check_sum;      // 校验和
+    RTP_Flag_t flag;     // 标志位
+    BYTE windows_num;    // 窗口大小
+};
+
+// DATA_LEN Bytes
+struct RTP_Data_t {
     BYTE data[DATA_LEN]; // 数据域
+};
+
+// 12 + DATA_LEN Bytes
+struct RTP_Datagram_t {
+    RTP_Head_t head;
+    RTP_Data_t data;
+};
+
+// 窗口属性
+struct Attribute_t {
+    DWORD time;
+    int index;
+    int send_number;
+    bool flag;
 };
 
 // 服务器状态枚举
@@ -69,217 +85,61 @@ enum ClientStatus {
     Client_Unknown_Error,
 };
 
-// 窗口属性
-struct Attribute {
-    int begin;
-    int length;
-    int send_number;
-    DWORD time;
-    bool flag;
-};
-
 #pragma pack()
 
+// RTP 可靠传输基类
 class RTP {
 protected:
-    // ============================= 初始设置 ==================== //
-    // UDP工具
+    // UDP 工具
     UDP *udp_ptr = new UDP();
-    // 对方的addr connect或者accept时设置
+    // connect/accept 设置
     sockaddr_in *addr_ptr = nullptr;
-    // 循环超时时间
-    DWORD sleep_time = 0;
-    // 发送序号
-//    DWORD send_number = rand() % 100;
-    DWORD send_number = 0;
-    // 发送缓冲区有效字节
-    pair<int, int> send_buf_effective_index{0, 0};
-    int send_buf_effective_num = 0;
-    // ============================= 握手更新设置 ==================== //
     // 是否连接 提供给send 和 recv 使用
     bool isConnected = false;
+    // 循环超时时间
+    DWORD sleep_time = 0;
+    // 窗口大小
+    DWORD windows_number = 20;
+    // 缓存区大小
+    DWORD buffers_number = 0;
+    // 网络延迟 初始值1s
+    DWORD network_delay = 1000;
     // 上次握手发送的时间
     DWORD Shake_Hands_Send_Time = -1;
-    // 窗口大小
-    DWORD windows_size = 4;
-    // 网络延迟 ms
-    DWORD network_delay = 1000;
-    // 接收序号
+    // 接收/发送基址
+    DWORD recv_base = 0;
+    DWORD send_base = rand() % 100;
+    // 接收/发送序号
     DWORD recv_number = 0;
-    // 已确认数据基址
-    DWORD base_index = 0;
-    // 发送缓冲区 根据双方最小窗口设置
-    vector<char> send_buf;
-    int send_buf_size = 0;
-    // 接收缓冲区 根据双方最小窗口设置
-    vector<char> recv_buf;
-    int recv_buf_size = 0;
-    // 接收缓冲有效字节
-    vector<pair<int, int>> recv_buf_effective_index;
-    // ============================= 无初始值 ==================== //
-    // 临时缓冲区
-    char temp_buf[DATA_LEN]{};
+    DWORD send_number = send_base;
+    // 发送缓冲区
+    vector<pair<int, RTP_Data_t>> send_buffers;
+    int free_buffer_head = 0;
+    int free_buffer_number = 0;
+    int valid_buffer_head = 0;
+    // 接收缓冲区
+    vector<char> recv_buffers;
+    list<pair<int, int>> valid_buffer_index{{0, 0}};
     // 收发线程
     thread *thread_send = nullptr;
     thread *thread_recv = nullptr;
     thread *thread_resend = nullptr;
-
     // 对共享数据加锁
     mutex send_mutex;
     mutex recv_mutex;
-    mutex send_window_mutex;
-    mutex share_data_mutex;
 
-    // ======== 提供一些get set 方法 方便锁的管理 TODO:锁的粒度太大 ======== //
-    DWORD get_send_number() {
-        // 创建时加锁 销毁时解锁
-        unique_lock<mutex> lock(share_data_mutex);
-        return send_number;
-    }
+    // RTP 提供给子类的接口
+    int recv_RTP_Datagram(RTP_Datagram_t *RTP_Datagram);
 
-    void add_send_number(DWORD number) {
-        // 创建时加锁 销毁时解锁
-        unique_lock<mutex> lock(share_data_mutex);
-        send_number += number;
-    }
+    int send_RTP_Signals(RTP_Datagram_t *RTP_Datagram, RTP_Head_t head);
 
-    int get_effective_index_len() {
-        // 创建时加锁 销毁时解锁
-        unique_lock<mutex> lock(share_data_mutex);
-        return send_buf_effective_num;
-    }
-
-    void set_send_buf_effective_index_first(int begin, int length) {
-        unique_lock<mutex> lock(share_data_mutex);
-        send_buf_effective_num -= (begin + length - send_buf_effective_index.first);
-        send_buf_effective_index.first = begin + length;
-        if (send_buf_effective_index.first >= send_buf_size) {
-            send_buf_effective_index.first -= (int) send_buf_size;
-        }
-    }
-
-    int get_send_buf_effective_index_first() {
-        unique_lock<mutex> lock(share_data_mutex);
-        return send_buf_effective_index.first;
-    }
-
-    int get_send_buf_effective_index_second() {
-        unique_lock<mutex> lock(share_data_mutex);
-        return send_buf_effective_index.second;
-    }
-
-    void add_send_buf_effective_index_second(int number) {
-        unique_lock<mutex> lock(share_data_mutex);
-        send_buf_effective_num += number;
-        send_buf_effective_index.second += number;
-        if (send_buf_effective_index.second >= send_buf_size) {
-            send_buf_effective_index.second -= send_buf_size;
-        }
-    }
-
-    int get_base_index() {
-        unique_lock<mutex> lock(share_data_mutex);
-        return base_index;
-    }
-
-    void add_index_offset(int length) {
-        unique_lock<mutex> lock(share_data_mutex);
-        base_index += length;
-        cout << "base_index: " << base_index << endl;
-    }
-
-    // ============================= Utils ==================== //
-    // 生成校验码
-    static WORD generate_sum_check(RTP_Datagram_t *RTP_Datagram);
-
-    // 检查校验码
-    static bool check_sum_check(RTP_Datagram_t *RTP_Datagram);
-
-    // 生成RTP_Datagram_t 报文
-    int generate_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, char *buf, int len,
-                              BYTE ACK, BYTE SYN, BYTE FIN, DWORD number) const;
-
-    // 发送信号
-    int send_signals(RTP_Datagram_t *RTP_Datagram, byte ack, byte syn, byte fin);
-
-    // 给定一个 buf 有效索引, 将数据填充到temp_buf 里面 并发送
-    int send_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, DWORD number, int begin, int length);
-
-    // ============================= 子类重写 ==================== //
-    virtual void recv_thread() = 0;
-
-    virtual void send_thread() = 0;
+    int send_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, RTP_Head_t head, int index);
 
 public:
+    // RTP 提供给上层的接口
+    int recv(char *buf, int len, int timeout = INT32_MAX);
 
-    int recv(char *buf, int len, int timeout = INT32_MAX) {
-        DWORD start = GetTickCount();
-        while (true) {
-            // 读超时
-            if (!isConnected || GetTickCount() - start >= timeout) {
-                return -1;
-            }
-
-            if (recv_buf_effective_index[0].second == 0) {
-                Sleep(sleep_time);
-                continue;
-            }
-
-            // 操作共享数据前加锁
-            recv_mutex.lock();
-
-            int data_len = (recv_buf_effective_index[0].second < len) ? (int) recv_buf_effective_index[0].second : len;
-            // 拷贝元素
-            copy(recv_buf.cbegin(), recv_buf.cbegin() + data_len, buf);
-            // 调整缓冲
-            copy(recv_buf.begin() + data_len, recv_buf.end(), recv_buf.begin());
-            // 调整缓冲索引
-            base_index += data_len;
-            for (auto &pair: recv_buf_effective_index) {
-                pair.first -= data_len;
-                pair.second -= data_len;
-            }
-            recv_buf_effective_index[0].first = 0;
-
-            // 操作共享数据后解锁
-            recv_mutex.unlock();
-            return data_len;
-        }
-    }
-
-    int send(char *buf, int len, int timeout = INT32_MAX) {
-        DWORD start = GetTickCount();
-        while (true) {
-            // 写超时
-            if (!isConnected || GetTickCount() - start >= timeout) {
-                return -1;
-            }
-
-            send_mutex.lock();
-            // 缓冲区数据满了
-            if ((send_buf_size - get_effective_index_len()) < len) {
-                send_mutex.unlock();
-                Sleep(sleep_time);
-                continue;
-            }
-
-            // 确保此刻send_buf_effective_index.second的值正确
-            int temp_send_buf_effective_index_second = get_send_buf_effective_index_second();
-            // 拷贝元素
-            int buf_end_2_effective_index_end = (int) send_buf_size - temp_send_buf_effective_index_second;
-            if (buf_end_2_effective_index_end > len) {
-                copy(buf, buf + len, send_buf.begin() + temp_send_buf_effective_index_second);
-            } else {
-                copy(buf, buf + buf_end_2_effective_index_end, send_buf.begin() + temp_send_buf_effective_index_second);
-                copy(buf + buf_end_2_effective_index_end, buf + len, send_buf.begin());
-            }
-            // 调整缓冲索引
-            add_send_buf_effective_index_second(len);
-            send_mutex.unlock();
-
-            return len;
-        }
-    }
+    int send(char *buf, int len, int timeout = INT32_MAX);
 
     ~RTP() {
         delete udp_ptr;
@@ -295,7 +155,7 @@ private:
     // 服务端状态
     ServerStatus Statu;
     // 信号队列 用于接收发送线程间通信
-    queue<Flag> signals_queue;
+    queue<RTP_Flag_t> signals_queue;
 
     void recv_thread();
 
@@ -354,7 +214,7 @@ private:
     // 客户端状态
     ClientStatus Statu;
     // 发送窗口属性
-    list<Attribute> send_window;
+    list<Attribute_t> send_windows_list;
 
     void recv_thread();
 
@@ -402,7 +262,7 @@ public:
     }
 
     int close() {
-        while (get_effective_index_len() != 0) {
+        while (free_buffer_number != buffers_number) {
             Sleep(1000);
         }
 

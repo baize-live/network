@@ -6,7 +6,7 @@
 
 const short port = 4000;
 const string host = "127.0.0.1";
-const int buffer_len = 1440;
+#define buffer_len DATA_LEN
 
 int main() {
     RTP_Client client;
@@ -54,20 +54,21 @@ int main() {
     }
 
     char buf[buffer_len];
-    int len = File::fileSize(file.filePath());
-    int now, sum = 0;
+    int sum = File::fileSize(file.filePath());
+    int len, now = 0;
     DWORD start = GetTickCount();
-    while (sum < len) {
-        now = (len - sum) < buffer_len ? (len - sum) : buffer_len;
-        inFile.read(buf, now);
-        client.send(buf, now);
-        sum += now;
+    while (now < sum) {
+        len = (sum - now) < buffer_len ? (sum - now) : buffer_len;
+        inFile.read(buf, len);
+        client.send(buf, len);
+        now += len;
+        cout << "发送" << now << endl;
     }
 
     DWORD end = GetTickCount();
     cout << "发送成功 " << file.fileName() << endl;
     cout << "用时: " << end - start << "ms" << endl;
-    cout << "平均吞吐率: " << len * 1.0 / (end - start) << endl;
+    cout << "平均吞吐率: " << sum * 1.0 / (end - start) << endl;
 
     inFile.close();
     if (client.close() == 0) {

@@ -5,7 +5,7 @@
 #include "utils/FileUtil.h"
 
 const short port = 2000;
-const int buffer_len = 1440;
+#define buffer_len DATA_LEN
 
 int main() {
     RTP_Server server;
@@ -35,11 +35,11 @@ int main() {
     while (true) {
         len = server.recv(buf, buffer_len);
         if (len == -1) {
-//            cout << "Error: " << -1 << endl;
             break;
         }
         outFile.write(buf, len);
         sum += len;
+        cout << "½ÓÊÕ" << sum << endl;
         if (sum >= fileSize) {
             break;
         }
