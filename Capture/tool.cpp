@@ -16,5 +16,5 @@ void print_ip(DWORD IP) {
 
 // 输出MAC
 void print_mac(byte *MAC) {
-    printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
+    printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
 }

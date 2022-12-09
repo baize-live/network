@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "lab.h"
+#include "struct.h"
 
 using namespace std;
 
@@ -127,4 +128,65 @@ pcap_t *get_ad_handle(pcap_if_t *&one_dev, pcap_if_t *&all_devs) {
     pcap_freealldevs(all_devs);
 
     return ad_handle;
+}
+
+// 发送ARP
+int send_arp(pcap_t *ad_handle, DWORD DesIP, DWORD SrcIP, byte *SrcMAC) {
+    // arp包结构大小，42个字节
+    const int arp_len = 42;
+    byte send_buf[arp_len];
+
+    if (INADDR_NONE != DesIP) {
+        set_arp_message(send_buf, arp_len, SrcMAC, SrcIP, DesIP);
+        // 如果发送成功
+        pcap_sendpacket(ad_handle, send_buf, arp_len);
+        return 1;
+    } else {
+        return -1;
+    }
+}
+
+// 捕获响应的ARP
+int recv_arp(pcap_t *ad_handle, DWORD DesIP, byte *DesMAC) {
+    int res;
+    pcap_pkthdr *header;
+    const u_char *pkt_data;
+    // 开始计时
+    DWORD start = GetTickCount();
+    while (true) {
+        res = pcap_next_ex(ad_handle, &header, &pkt_data);
+
+        if (GetTickCount() - start > 5000 || res < 0) {
+            return -1;
+        }
+
+        if (res == 0) {
+            continue;
+        }
+
+        auto *mac_frame = (MACFrame_t *) pkt_data;
+        if (htons(mac_frame->MAC_Frame_Head.FrameType) != ARP) {
+            continue;
+        }
+
+        auto *arp_packet = (ArpPacket_t *) mac_frame->data;
+        if (htons(arp_packet->op) != ARP_RESPONSE || arp_packet->SrcIP != DesIP) {
+            continue;
+        }
+
+        memcpy(DesMAC, arp_packet->SrcMAC, 6);
+        return 1;
+    }
+}
+
+// 获取本地MAC
+int get_local_mac(pcap_t *ad_handle, DWORD localIP, byte *localMAC) {
+    byte fakeMAC[6] = {0x11, 0x11, 0x11, 0x11, 0x11, 0x11};
+    DWORD fakeIP = inet_addr("11.11.11.11");
+
+    if (send_arp(ad_handle, localIP, fakeIP, fakeMAC) == 1 && recv_arp(ad_handle, localIP, localMAC) == 1) {
+        return 1;
+    } else {
+        return -1;
+    }
 }

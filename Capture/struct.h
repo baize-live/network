@@ -28,13 +28,13 @@ struct IPV4_Datagram_Head_t {
 
 // MAC帧 1514Bytes
 struct MACFrame_t {
-    MACFrame_Head_t mac_frame_head; // MAC帧头
+    MACFrame_Head_t MAC_Frame_Head; // MAC帧头
     BYTE data[1500];                // 剩余数据
 };
 
 // IPV4数据报 1500Bytes
 struct IPV4_Datagram_t {
-    IPV4_Datagram_Head_t ipv4_datagram_head; // IP数据报头
+    IPV4_Datagram_Head_t IPV4_Datagram_Head; // IP数据报头
     BYTE data[1460];                    // 剩余数据
 };
 

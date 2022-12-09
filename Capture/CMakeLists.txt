@@ -14,5 +14,8 @@ target_link_libraries(Lab1 Packet wpcap ws2_32)
 add_executable(Lab3 lab3.cpp parse_frame.cpp produce_frame.cpp struct.h lab.cpp lab.h tool.cpp)
 target_link_libraries(Lab3 Packet wpcap ws2_32)
 
+add_executable(Lab5 lab5.cpp parse_frame.cpp produce_frame.cpp struct.h lab.cpp lab.h tool.cpp)
+target_link_libraries(Lab5 Packet wpcap ws2_32)
+
 add_executable(Test test.cpp parse_frame.cpp struct.h)
 target_link_libraries(Test ws2_32)
