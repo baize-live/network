@@ -11,10 +11,10 @@ void print_bytes(byte *buf, const int len) {
 
 // 输出IP 192.168.1.1
 void print_ip(DWORD IP) {
-    printf("IP: %lu.%lu.%lu.%lu\n", IP & 0xFF, (IP >> 8) & 0xFF, (IP >> 16) & 0xFF, (IP >> 24) & 0xFF);
+    printf("%lu.%lu.%lu.%lu", IP & 0xFF, (IP >> 8) & 0xFF, (IP >> 16) & 0xFF, (IP >> 24) & 0xFF);
 }
 
 // 输出MAC
 void print_mac(byte *MAC) {
-    printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
+    printf("%02X:%02X:%02X:%02X:%02X:%02X", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
 }

@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.23)
 project(Capture)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS -m32)
+#set(CMAKE_CXX_FLAGS -m32)
 
 #引入头文件
 include_directories(${PROJECT_SOURCE_DIR}/include)
 #引入库文件
-link_directories(${PROJECT_SOURCE_DIR}/libx86)
+link_directories(${PROJECT_SOURCE_DIR}/lib)
 #
 add_executable(Lab1 lab1.cpp parse_frame.cpp struct.h lab.cpp lab.h)
 target_link_libraries(Lab1 Packet wpcap ws2_32)

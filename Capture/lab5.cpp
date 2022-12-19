@@ -16,8 +16,8 @@ struct Routing_Table_Entry {
     DWORD NextIP;
 };
 
-DWORD localIP;
-byte localMAC[6];
+MAC_Address localMAC;
+Routing_Table_Entry localIP[2];
 map<DWORD, MAC_Address> ARP_Table;
 vector<Routing_Table_Entry> Routing_Table{};
 
@@ -43,23 +43,53 @@ int main() {
     pcap_if_t *one_dev;
     get_one_dev(one_dev, all_devs, all_devs_num, one_dev_num);
 
-    cout << "listening on ... 网卡信息如下: " << endl;
-    ifprint(one_dev);
-
     // 拿到指定网卡句柄
     pcap_t *ad_handle = get_ad_handle(one_dev, all_devs);
 
     // 获取本机IP
-    localIP = inet_addr(iptos(one_dev->addresses->addr));
+    cout << "获取本机IP, 请稍等..." << endl;
+    int i = 0;
+    for (pcap_addr_t *addr = one_dev->addresses; addr; addr = addr->next) {
+        if (i == 2) {
+            break;
+        }
+        localIP[i].DesIP = inet_addr(iptos(addr->addr));
+        localIP[i].Mask = inet_addr(iptos(addr->netmask));
+        localIP[i].NextIP = localIP[i].DesIP & localIP[i].Mask;
+        cout << "本机IP" << i + 1 << ": ";
+        print_ip(localIP[i++].DesIP);
+        cout << endl;
+    }
+
     // 获取本机MAC
     cout << "获取本机MAC, 请稍等..." << endl;
-    if (get_local_mac(ad_handle, localIP, localMAC) == 1) {
-        print_ip(localIP);
-        print_mac(localMAC);
+    if (get_local_mac(ad_handle, localIP[0].DesIP, localMAC.MAC) == 1) {
+        cout << "本机MAC: ";
+        print_mac(localMAC.MAC);
         cout << endl;
     } else {
         cout << "获取本机MAC失败" << endl;
         exit(1);
+    }
+
+    string str;
+    cout << "请添加路由表项.(输入 break 跳出.) " << endl;
+    DWORD DesIP, Mask, NextIP;
+    while (true) {
+        cout << "请输入目的IP地址:";
+        cin >> str;
+        if (str == "break") {
+            break;
+        }
+        DesIP = inet_addr(str.c_str());
+        cout << "请输入子网掩码:";
+        cin >> str;
+        Mask = inet_addr(str.c_str());
+        cout << "请输入下一跳IP地址:";
+        cin >> str;
+        NextIP = inet_addr(str.c_str());
+        Routing_Table.push_back({DesIP, Mask, NextIP});
+        cout << endl;
     }
 
     // 捕获字节流
@@ -92,8 +122,29 @@ void capture_bytes(pcap_t *&ad_handle) {
     }
 }
 
+MAC_Address find_MAC_from_ARP_Table(pcap_t *&ad_handle, DWORD IP, bool &ret) {
+    ret = true;
+    if (ARP_Table.find(IP) != ARP_Table.end()) {
+        return ARP_Table[IP];
+    } else {
+        // 发送ARP请求
+        MAC_Address MAC_address{};
+        if (send_arp(ad_handle, IP, localIP[0].DesIP, localMAC.MAC) == 1
+            && recv_arp(ad_handle, IP, MAC_address.MAC) == 1) {
+            ARP_Table[IP] = MAC_address;
+        } else {
+            ret = false;
+        }
+        return MAC_address;
+    }
+}
+
 void route_forwarding(pcap_t *&ad_handle, byte *buf, int len) {
     auto *MAC_Frame = (MACFrame_t *) buf;
+
+    if (memcmp(MAC_Frame->MAC_Frame_Head.SrcMAC, localMAC.MAC, 6) == 0) {
+        return;
+    }
 
     if (htons(MAC_Frame->MAC_Frame_Head.FrameType) != IPV4) {
         return;
@@ -101,29 +152,51 @@ void route_forwarding(pcap_t *&ad_handle, byte *buf, int len) {
 
     auto *IPv4_Datagram = (IPV4_Datagram_t *) MAC_Frame->data;
 
+    // 本机IP 不处理
+    if (IPv4_Datagram->IPV4_Datagram_Head.DesIP == localIP[0].DesIP ||
+        IPv4_Datagram->IPV4_Datagram_Head.DesIP == localIP[1].DesIP) {
+        return;
+    }
+
+    // 直接投递
+    if (((IPv4_Datagram->IPV4_Datagram_Head.DesIP & localIP[0].Mask) == localIP[0].NextIP) ||
+        ((IPv4_Datagram->IPV4_Datagram_Head.DesIP & localIP[1].Mask) == localIP[1].NextIP)) {
+        bool ret = false;
+        MAC_Address MAC_address = find_MAC_from_ARP_Table(ad_handle, IPv4_Datagram->IPV4_Datagram_Head.DesIP, ret);
+        if (!ret) {
+            cout << "直接投递异常, 获得MAC失败." << endl;
+            return;
+        }
+        memcpy(MAC_Frame->MAC_Frame_Head.DesMAC, MAC_address.MAC, 6);
+        memcpy(MAC_Frame->MAC_Frame_Head.SrcMAC, localMAC.MAC, 6);
+        cout << "直接投递成功. SrcIP:";
+        print_ip(IPv4_Datagram->IPV4_Datagram_Head.SrcIP);
+        cout << " DesIP:";
+        print_ip(IPv4_Datagram->IPV4_Datagram_Head.DesIP);
+        cout << endl;
+        pcap_sendpacket(ad_handle, buf, len);
+        return;
+    }
+
     // 路由转发
     for (auto &item: Routing_Table) {
         // 找到路由表中的目的地址
         if ((IPv4_Datagram->IPV4_Datagram_Head.DesIP & item.Mask) == item.DesIP) {
-            // 查找ARP表
-            auto it = ARP_Table.find(item.NextIP);
-            if (it != ARP_Table.end()) {
-                // 找到ARP表中的下一跳地址
-                memcpy(MAC_Frame->MAC_Frame_Head.DesMAC, it->second.MAC, 6);
-                memcpy(MAC_Frame->MAC_Frame_Head.SrcMAC, localMAC, 6);
-            } else {
-                // 没有找到ARP表中的下一跳地址
-                MAC_Address MAC_address{};
-                // 发送ARP请求
-                if (send_arp(ad_handle, item.NextIP, localIP, localMAC) == 1
-                    && recv_arp(ad_handle, item.NextIP, MAC_address.MAC) == 1) {
-                    ARP_Table[item.NextIP] = MAC_address;
-                    memcpy(MAC_Frame->MAC_Frame_Head.DesMAC, MAC_address.MAC, 6);
-                    memcpy(MAC_Frame->MAC_Frame_Head.SrcMAC, localMAC, 6);
-                } else {
-                    return;
-                }
+            bool ret = false;
+            MAC_Address MAC_address = find_MAC_from_ARP_Table(ad_handle, item.NextIP, ret);
+            if (!ret) {
+                cout << "获得MAC失败, 路由转发异常." << endl;
+                return;
             }
+            memcpy(MAC_Frame->MAC_Frame_Head.DesMAC, MAC_address.MAC, 6);
+            memcpy(MAC_Frame->MAC_Frame_Head.SrcMAC, localMAC.MAC, 6);
+            cout << "路由转发成功. SrcIP:";
+            print_ip(IPv4_Datagram->IPV4_Datagram_Head.SrcIP);
+            cout << " DesIP:";
+            print_ip(IPv4_Datagram->IPV4_Datagram_Head.DesIP);
+            cout << " NextIP:";
+            print_ip(item.NextIP);
+            cout << endl;
             pcap_sendpacket(ad_handle, buf, len);
             return;
         }
