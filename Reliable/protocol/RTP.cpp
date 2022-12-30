@@ -1,7 +1,5 @@
 #include "RTP.h"
 
-mutex test_mutex;
-
 inline void print_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, int len, const string &str) {
 //    if (len < 0) {
 //        return;
@@ -246,6 +244,15 @@ void RTP_Server::recv_thread() {
 
         recv_mutex.lock();
 
+        // 调整窗口大小
+        if (windows_number < max_windows_number) {
+            windows_number++;
+            // 重设缓冲大小
+            buffers_number = windows_number * 2 + 1;
+            recv_buffers.resize(buffers_number * DATA_LEN);
+            send_buffers.resize(buffers_number);
+        }
+
         // 拷贝数据
         int start = RTP_Datagram->head.send_num - recv_base;
         len -= sizeof(RTP_Head_t);
@@ -454,7 +461,24 @@ void RTP_Client::recv_thread() {
             for (auto &it: send_windows_list) {
                 if (it.send_number + send_buffers[it.index].first <= RTP_Datagram->head.recv_num) {
                     it.flag = true;
+                    // 慢启动
+                    if (windows_number < max_windows_number) {
+                        windows_number++;
+                        // 重设缓冲大小
+                        buffers_number = windows_number * 2 + 1;
+                        recv_buffers.resize(buffers_number * DATA_LEN);
+                        send_buffers.resize(buffers_number);
+                    }
                 } else {
+                    // 快重传
+                    if (++quick_resend_number >= 3) {
+                        send_RTP_Datagram(RTP_Datagram,
+                                          RTP_Head_generate(0, 0, 0, it.send_number, recv_number, windows_number),
+                                          it.index);
+                        it.time = GetTickCount();
+                        quick_resend_number = 0;
+                    }
+
                     break;
                 }
             }

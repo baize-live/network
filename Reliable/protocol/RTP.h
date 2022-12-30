@@ -98,8 +98,12 @@ protected:
     bool isConnected = false;
     // 循环超时时间
     DWORD sleep_time = 0;
-    // 窗口大小
-    DWORD windows_number = 20;
+    // 窗口大小 用于拥塞控制
+    DWORD windows_number = 5;
+    // 最大窗口大小 用于拥塞控制
+    DWORD max_windows_number = 5;
+    // 快重传
+    DWORD quick_resend_number = 0;
     // 缓存区大小
     DWORD buffers_number = 0;
     // 网络延迟 初始值1s
