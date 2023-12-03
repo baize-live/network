@@ -4,7 +4,7 @@
 #include "protocol/protocol.h"
 #include "utils/FileUtil.h"
 
-const short port = 4000;
+const short port = 2000;
 const string host = "127.0.0.1";
 #define buffer_len DATA_LEN
 
@@ -62,7 +62,6 @@ int main() {
         inFile.read(buf, len);
         client.send(buf, len);
         now += len;
-        cout << "·¢ËÍ" << now << endl;
     }
 
     DWORD end = GetTickCount();

@@ -13,6 +13,7 @@
 
 using namespace std;
 #define DATA_LEN 10000
+#define DEBUG_RTP
 
 #pragma pack(1)        // 进入字节对齐方式
 
@@ -47,8 +48,8 @@ struct RTP_Datagram_t {
 // 窗口属性
 struct Attribute_t {
     DWORD time;
-    int index;
-    int send_number;
+    DWORD index;
+    DWORD send_number;
     bool flag;
 };
 
@@ -89,6 +90,8 @@ enum ClientStatus {
 
 // RTP 可靠传输基类
 class RTP {
+    // 随机数
+    default_random_engine random;
 protected:
     // UDP 工具
     UDP *udp_ptr = new UDP();
@@ -98,29 +101,31 @@ protected:
     bool isConnected = false;
     // 循环超时时间
     DWORD sleep_time = 0;
-    // 窗口大小 用于拥塞控制
-    DWORD windows_number = 5;
-    // 最大窗口大小 用于拥塞控制
-    DWORD max_windows_number = 5;
-    // 快重传
-    DWORD quick_resend_number = 0;
-    // 缓存区大小
-    DWORD buffers_number = 0;
+    // 窗口大小
+    DWORD windows_number = 10;
     // 网络延迟 初始值1s
     DWORD network_delay = 1000;
     // 上次握手发送的时间
     DWORD Shake_Hands_Send_Time = -1;
     // 接收/发送基址
     DWORD recv_base = 0;
-    DWORD send_base = rand() % 100;
+    DWORD send_base = random() % 100;
     // 接收/发送序号
     DWORD recv_number = 0;
     DWORD send_number = send_base;
     // 发送缓冲区
     vector<pair<int, RTP_Data_t>> send_buffers;
-    int free_buffer_head = 0;
-    int free_buffer_number = 0;
-    int valid_buffer_head = 0;
+    // 发送缓冲区大小
+    DWORD buffers_number = 0;
+    DWORD free_buffer_head = 0;
+    DWORD free_buffer_number = 0;
+    DWORD valid_buffer_head = 0;
+    // 发送窗口属性
+    list<Attribute_t> send_windows_list;
+
+    // 信号队列 用于接收发送线程间通信
+    queue<RTP_Flag_t> signals_queue;
+
     // 接收缓冲区
     vector<char> recv_buffers;
     list<pair<int, int>> valid_buffer_index{{0, 0}};
@@ -128,16 +133,32 @@ protected:
     thread *thread_send = nullptr;
     thread *thread_recv = nullptr;
     thread *thread_resend = nullptr;
+
     // 对共享数据加锁
     mutex send_mutex;
     mutex recv_mutex;
+    mutex test_mutex;
 
     // RTP 提供给子类的接口
     int recv_RTP_Datagram(RTP_Datagram_t *RTP_Datagram);
 
     int send_RTP_Signals(RTP_Datagram_t *RTP_Datagram, RTP_Head_t head);
 
-    int send_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, RTP_Head_t head, int index);
+    int send_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, RTP_Head_t head, DWORD index);
+
+    void print_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, int len, const string &str);
+
+    // 接收数据及缓冲区的处理
+    void handle_recv_Data(RTP_Datagram_t *RTP_Datagram, int len);
+
+    // 发送数据及缓冲区的处理
+    void handle_send_Data(RTP_Datagram_t *RTP_Datagram);
+
+    // 重传数据及缓冲区的处理
+    void handle_resend_Data(RTP_Datagram_t *RTP_Datagram);
+
+    // 禁止外部构建
+    RTP() = default;
 
 public:
     // RTP 提供给上层的接口
@@ -157,18 +178,18 @@ public:
 class RTP_Server : public RTP {
 private:
     // 服务端状态
-    ServerStatus Statu;
-    // 信号队列 用于接收发送线程间通信
-    queue<RTP_Flag_t> signals_queue;
+    ServerStatus Status;
 
     void recv_thread();
 
     void send_thread();
 
+    void resend_thread();
+
 public:
     int server(short port) {
         int len = udp_ptr->init_socket(port);
-        Statu = (len == 0 ? Server_init : Server_Unknown_Error);
+        Status = (len == 0 ? Server_init : Server_Unknown_Error);
         return len;
     }
 
@@ -181,20 +202,20 @@ public:
         // 初始化 对方地址
         addr_ptr = new sockaddr_in();
         // 服务器开始监听
-        Statu = Server_listen;
+        Status = Server_listen;
         return 0;
     }
 
     int accept() {
         // 根据状态判断 是否连接成功
         while (true) {
-            switch (Statu) {
+            switch (Status) {
                 case Server_accept:
                 case Server_Shake_Hands_2:
                     Sleep(sleep_time);
                     continue;
                 case Server_listen:
-                    Statu = Server_accept;
+                    Status = Server_accept;
                     continue;
                 case Server_init:
                 case Server_Unknown_Error:
@@ -209,16 +230,14 @@ public:
         while (!signals_queue.empty()) {
             Sleep(sleep_time);
         }
-        Statu = Server_Connected_Close;
+        Status = Server_Connected_Close;
     }
 };
 
 class RTP_Client : public RTP {
 private:
     // 客户端状态
-    ClientStatus Statu;
-    // 发送窗口属性
-    list<Attribute_t> send_windows_list;
+    ClientStatus Status;
 
     void recv_thread();
 
@@ -229,7 +248,7 @@ private:
 public:
     int client() {
         int len = udp_ptr->init_socket();
-        Statu = (len == 0 ? Client_init : Client_Unknown_Error);
+        Status = (len == 0 ? Client_init : Client_Unknown_Error);
         return len;
     }
 
@@ -246,9 +265,9 @@ public:
         DWORD start = GetTickCount();
         // 根据状态判断 是否连接成功
         while (true) {
-            switch (Statu) {
+            switch (Status) {
                 case Client_init:
-                    Statu = Client_Shake_Hands_1;
+                    Status = Client_Shake_Hands_1;
                     break;
                 case Client_Shake_Hands_1:
                 case Client_Shake_Hands_3:
@@ -271,11 +290,11 @@ public:
         }
 
         // 客户端准备连接
-        Statu = Client_Wave_Hands_1;
+        Status = Client_Wave_Hands_1;
         DWORD start = GetTickCount();
         // 根据状态判断 是否连接成功
         while (true) {
-            switch (Statu) {
+            switch (Status) {
                 case Client_Connected_Close:
                     return 0;
                 case Client_Unknown_Error:
@@ -284,14 +303,14 @@ public:
                     Sleep(sleep_time);
             }
             if (GetTickCount() - start > network_delay * 10) {
-                Statu = Client_Unknown_Error;
+                Status = Client_Unknown_Error;
                 return -1;
             }
         }
     }
 
     ~RTP_Client() {
-        Statu = Client_Connected_Close;
+        Status = Client_Connected_Close;
     }
 };
 

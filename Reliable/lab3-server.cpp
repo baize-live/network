@@ -39,7 +39,6 @@ int main() {
         }
         outFile.write(buf, len);
         sum += len;
-        cout << "½ÓÊÕ" << sum << endl;
         if (sum >= fileSize) {
             break;
         }
@@ -49,4 +48,5 @@ int main() {
 
     outFile.close();
 
+    system("pause");
 }
