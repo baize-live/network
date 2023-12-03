@@ -22,11 +22,11 @@ int main() {
     for (auto &file: fileList) {
         cout << fileNum++ << ". " << file->fileName() << endl;
     }
-    cout << "ÇëÑ¡ÔñÒ»¸öÎÄ¼þ.." << endl;
+    cout << "è¯·é€‰æ‹©ä¸€ä¸ªæ–‡ä»¶.." << endl;
 
     cin >> fileNum;
     if (fileNum > fileList.size()) {
-        cout << "ÎÄ¼þÑ¡ÔñÊ§°Ü " << endl;
+        cout << "æ–‡ä»¶é€‰æ‹©å¤±è´¥ " << endl;
         return 0;
     }
     auto it = fileList.begin();
@@ -37,15 +37,15 @@ int main() {
     }
     File file = **it;
 
-    cout << "¿ªÊ¼·¢ËÍ " << file.fileName() << " ´óÐ¡: " << file.fileSize() << endl;
+    cout << "å¼€å§‹å‘é€ " << file.fileName() << " å¤§å°: " << file.fileSize() << endl;
 
-    // ÏÈ·¢ËÍ ÎÄ¼þ´óÐ¡ºÍÎÄ¼þÃû
+    // å…ˆå‘é€ æ–‡ä»¶å¤§å°å’Œæ–‡ä»¶å
     Request request;
     request.set_header("fileSize", to_string(file.fileSize()));
     request.set_header("fileName", file.fileName());
     request.request(client);
 
-    // È»ºó·¢ËÍ ÎÄ¼þ±¾Ìå
+    // ç„¶åŽå‘é€ æ–‡ä»¶æœ¬ä½“
     std::ifstream inFile(file.filePath(), std::ios::in | std::ios::binary);
 
     if (!inFile.is_open()) {
@@ -65,13 +65,13 @@ int main() {
     }
 
     DWORD end = GetTickCount();
-    cout << "·¢ËÍ³É¹¦ " << file.fileName() << endl;
-    cout << "ÓÃÊ±: " << end - start << "ms" << endl;
-    cout << "Æ½¾ùÍÌÍÂÂÊ: " << sum * 1.0 / (end - start) << endl;
+    cout << "å‘é€æˆåŠŸ " << file.fileName() << endl;
+    cout << "ç”¨æ—¶: " << end - start << "ms" << endl;
+    cout << "å¹³å‡åžåçŽ‡: " << sum * 1.0 / (end - start) << endl;
 
     inFile.close();
     if (client.close() == 0) {
-        cout << "»ÓÊÖ³É¹¦" << endl;
+        cout << "æŒ¥æ‰‹æˆåŠŸ" << endl;
     }
 
 }

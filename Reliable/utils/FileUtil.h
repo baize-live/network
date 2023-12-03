@@ -15,20 +15,20 @@
 #include <list>
 #include <vector>
 
-/** ¸Ãº¯Êı½«¸ø¶¨µÄÂ·¾¶ÖĞµÄ"\\" Ìæ»»³É "/"£¬Í¬Ê±½«Â·¾¶Î²ºóµÄ"/"È¥µô
+/** è¯¥å‡½æ•°å°†ç»™å®šçš„è·¯å¾„ä¸­çš„"\\" æ›¿æ¢æˆ "/"ï¼ŒåŒæ—¶å°†è·¯å¾„å°¾åçš„"/"å»æ‰
  */
 void sepReplace(std::string &sPath);
 
-/** ¸ø¶¨Ò»¸öÂ·¾¶£¬ÅĞ¶Ï¸ÃÂ·¾¶ÊÇÎÄ¼ş»¹ÊÇÎÄ¼ş¼Ğ
-  * ·µ»ØÖµÎª1£¬ÔòÎªÎÄ¼ş£¬·µ»Ø2ÔòÎªÎÄ¼ş¼Ğ£¬·µ»Ø0ÔòÎª´íÎó£¬¿ÉÄÜ¸ÄÂ·¾¶²»ÊÇ³£¹æÎÄ¼ş/ÎÄ¼ş¼ĞÂ·¾¶
+/** ç»™å®šä¸€ä¸ªè·¯å¾„ï¼Œåˆ¤æ–­è¯¥è·¯å¾„æ˜¯æ–‡ä»¶è¿˜æ˜¯æ–‡ä»¶å¤¹
+  * è¿”å›å€¼ä¸º1ï¼Œåˆ™ä¸ºæ–‡ä»¶ï¼Œè¿”å›2åˆ™ä¸ºæ–‡ä»¶å¤¹ï¼Œè¿”å›0åˆ™ä¸ºé”™è¯¯ï¼Œå¯èƒ½æ”¹è·¯å¾„ä¸æ˜¯å¸¸è§„æ–‡ä»¶/æ–‡ä»¶å¤¹è·¯å¾„
   */
 int isFileOrDir(const std::string &sPath);
 
 /**
  * @brief
- * ´Ó¸ø¶¨µÄÎÄ¼ş£¬µÃµ½Æä¶à¼¶×ÓÄ¿Â¼£¬°´ÕÕÆä¶ÔÓ¦Ë³Ğò´æ´¢µ½vSubDirsÖĞ
- * Èç£ºstr = "\\DirA\\DirB\\DirC\\FileA"
- * Ôò×ª»»ºóµÄvSubDirsÎª:[
+ * ä»ç»™å®šçš„æ–‡ä»¶ï¼Œå¾—åˆ°å…¶å¤šçº§å­ç›®å½•ï¼ŒæŒ‰ç…§å…¶å¯¹åº”é¡ºåºå­˜å‚¨åˆ°vSubDirsä¸­
+ * å¦‚ï¼šstr = "\\DirA\\DirB\\DirC\\FileA"
+ * åˆ™è½¬æ¢åçš„vSubDirsä¸º:[
  *                     DirA,
  *                     DirA/DirB,
  *                     DirA/DirB/DirC,
@@ -40,7 +40,7 @@ int isFileOrDir(const std::string &sPath);
 void getMultiLayerDirFromStr(const std::string &str, std::vector<std::string> &vSubDirs);
 
 /**
- * @brief ×Ö·û´®·Ö¸îº¯Êı£¬°´ÕÕ¸ø¶¨µÄ·Ö¸î×Ö·ûcSep½øĞĞ·Ö¸î¡£·Ö¸î½á¹û´æ´¢ÔÚvTokenResÖĞ
+ * @brief å­—ç¬¦ä¸²åˆ†å‰²å‡½æ•°ï¼ŒæŒ‰ç…§ç»™å®šçš„åˆ†å‰²å­—ç¬¦cSepè¿›è¡Œåˆ†å‰²ã€‚åˆ†å‰²ç»“æœå­˜å‚¨åœ¨vTokenResä¸­
  * @param str
  * @param cSep
  * @param vTokenRes
@@ -69,19 +69,19 @@ public:
 
     bool isDir();
 
-    // ·µ»Øµ±Ç°ÎÄ¼şËùÔÚÄ¿Â¼µÄ¶ÔÏó
+    // è¿”å›å½“å‰æ–‡ä»¶æ‰€åœ¨ç›®å½•çš„å¯¹è±¡
     Dir parentDir();
 
-    // µ±Ç°ÎÄ¼ş¼ĞÏÂ´´½¨ÎÄ¼ş
+    // å½“å‰æ–‡ä»¶å¤¹ä¸‹åˆ›å»ºæ–‡ä»¶
     bool touch(const std::string &sFileName);
 
-    // Ö¸¶¨ÎÄ¼ş¼Ğ£¬ÔÚÆäÏÂ´´½¨ĞÂÎÄ¼ş
+    // æŒ‡å®šæ–‡ä»¶å¤¹ï¼Œåœ¨å…¶ä¸‹åˆ›å»ºæ–°æ–‡ä»¶
     static bool touch(const std::string &sTarDirName, const std::string &sNewFileName);
 
-    // ½«µ±Ç°ÎÄ¼ş¸´ÖÆµ½Ä¿±êÎÄ¼ş¼ĞÏÂ
+    // å°†å½“å‰æ–‡ä»¶å¤åˆ¶åˆ°ç›®æ ‡æ–‡ä»¶å¤¹ä¸‹
     virtual bool copy(const std::string &sTarDirPath);
 
-    // Ö¸¶¨ÎÄ¼ş¼Ğ£¬½«Ö¸¶¨ÎÄ¼ş¿½±´µ½Ö¸¶¨ÎÄ¼ş¼ĞÏÂ
+    // æŒ‡å®šæ–‡ä»¶å¤¹ï¼Œå°†æŒ‡å®šæ–‡ä»¶æ‹·è´åˆ°æŒ‡å®šæ–‡ä»¶å¤¹ä¸‹
     static bool copy(const std::string &sTarDirName, const std::string &sFilePath);
 
 protected:
@@ -102,18 +102,18 @@ public:
     static bool mkdir(const std::string &sTarDirPath, const std::string &sNewDirName);
 
 
-    // ±éÀúµ±Ç°ÎÄ¼ş¼ĞÏÂµÄËùÓĞÎÄ¼ş
-    // Èç¹ûbDeepTraverseÎªFALSE£¬ÔòÖ»±éÀúµ±Ç°Ä¿Â¼
-    // Èç¹ûbDeepTraverseÎªTRUE£¬ Ôò±éÀúµ±Ç°Ä¿Â¼µÄËùÓĞ×ÓÄ¿Â¼¼°ÆäÎÄ¼ş
+    // éå†å½“å‰æ–‡ä»¶å¤¹ä¸‹çš„æ‰€æœ‰æ–‡ä»¶
+    // å¦‚æœbDeepTraverseä¸ºFALSEï¼Œåˆ™åªéå†å½“å‰ç›®å½•
+    // å¦‚æœbDeepTraverseä¸ºTRUEï¼Œ åˆ™éå†å½“å‰ç›®å½•çš„æ‰€æœ‰å­ç›®å½•åŠå…¶æ–‡ä»¶
     const FileList &entry(bool bDeepTraverse = false);
 
-    // ¾²Ì¬º¯Êı
+    // é™æ€å‡½æ•°
     static FileList entry_static(const std::string &sDirPath, bool bDeepTraverse = false);      // ???
 
-    // ÖØÔØº¯Êı£¬½«µ±Ç°ÎÄ¼ş¼Ğ¸´ÖÆµ½Ä¿±êÎÄ¼ş¼ĞÏÂ
+    // é‡è½½å‡½æ•°ï¼Œå°†å½“å‰æ–‡ä»¶å¤¹å¤åˆ¶åˆ°ç›®æ ‡æ–‡ä»¶å¤¹ä¸‹
     bool copy(const std::string &sTarDirPath) override;
 
-    // ½«Ò»¸ö¸ø¶¨µÄÎÄ¼ş¼Ğ£¬¸´ÖÆµ½Ä¿±êÎÄ¼ş¼Ğ£¬²»ÔÚÄ¿±êÎÄ¼ş¼ĞÏÂ´´½¨µ±Ç°ÎÄ¼ş¼Ğ£¬Ö»ÊÇ°Ñµ±Ç°ÎÄ¼ş¼ĞÀïµÄËùÓĞÄÚÈİ¸´ÖÆµ½Ä¿±êÎÄ¼ş¼ĞÏÂ¡£
+    // å°†ä¸€ä¸ªç»™å®šçš„æ–‡ä»¶å¤¹ï¼Œå¤åˆ¶åˆ°ç›®æ ‡æ–‡ä»¶å¤¹ï¼Œä¸åœ¨ç›®æ ‡æ–‡ä»¶å¤¹ä¸‹åˆ›å»ºå½“å‰æ–‡ä»¶å¤¹ï¼Œåªæ˜¯æŠŠå½“å‰æ–‡ä»¶å¤¹é‡Œçš„æ‰€æœ‰å†…å®¹å¤åˆ¶åˆ°ç›®æ ‡æ–‡ä»¶å¤¹ä¸‹ã€‚
     static bool copy(const std::string &sSrcDirPath, const std::string &sTarDirPath);
 
 protected:
@@ -125,8 +125,8 @@ protected:
     FileList m_lstFileList;
 };
 
-// »ñÈ¡¸ø¶¨µÄÎÄ¼şÏà¶ÔÓÚ¸ø¶¨µÄÎÄ¼ş¼ĞµÄÏà¶ÔÂ·¾¶
-// ÎÄ¼şĞèÒª´æÔÚÓÚÎÄ¼ş¼ĞÖĞ£¬Èç¹ûÎÄ¼ş²»´æÔÚÓëÎÄ¼ş¼Ğ£¬·µ»Ø¿Õ×Ö·û´®
+// è·å–ç»™å®šçš„æ–‡ä»¶ç›¸å¯¹äºç»™å®šçš„æ–‡ä»¶å¤¹çš„ç›¸å¯¹è·¯å¾„
+// æ–‡ä»¶éœ€è¦å­˜åœ¨äºæ–‡ä»¶å¤¹ä¸­ï¼Œå¦‚æœæ–‡ä»¶ä¸å­˜åœ¨ä¸æ–‡ä»¶å¤¹ï¼Œè¿”å›ç©ºå­—ç¬¦ä¸²
 std::string getRelativePath(File &file, Dir &dir);
 
 #endif // FILE_V2_H

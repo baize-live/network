@@ -27,7 +27,7 @@ int main() {
 
     File file("../recv/" + fileName);
 
-    cout << "¿ªÊ¼½ÓÊÕ " << file.fileName() << " ´óÐ¡: " << fileSize << endl;
+    cout << "å¼€å§‹æŽ¥æ”¶ " << file.fileName() << " å¤§å°: " << fileSize << endl;
 
     std::ofstream outFile(file.filePath(), std::ios::out | std::ios::binary | std::ios::app);
 
@@ -44,7 +44,7 @@ int main() {
         }
     }
 
-    cout << "½ÓÊÕ³É¹¦ " << file.fileName() << endl;
+    cout << "æŽ¥æ”¶æˆåŠŸ " << file.fileName() << endl;
 
     outFile.close();
 

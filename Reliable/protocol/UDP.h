@@ -5,20 +5,20 @@
 
 #include "winsock2.h"
 
-// UDP »ù´¡Ğ­Òé
+// UDP åŸºç¡€åè®®
 class UDP {
 private:
     SOCKET udp_socket{};
 
-    // ´´½¨socket
+    // åˆ›å»ºsocket
     int create_socket() {
         WSADATA wsd{};
-        // ³õÊ¼»¯ socket»·¾³ //µÚÒ»¸ö²ÎÊıÊÇdll°æ±¾ºÅ£¬µÚ¶ş¸ö²ÎÊıÊÇ´´½¨µÄsocket¶ÔÏó ĞèÒªÈ·ÈÏÊÇ·ñ³õÊ¼»¯³É¹¦
+        // åˆå§‹åŒ– socketç¯å¢ƒ //ç¬¬ä¸€ä¸ªå‚æ•°æ˜¯dllç‰ˆæœ¬å·ï¼Œç¬¬äºŒä¸ªå‚æ•°æ˜¯åˆ›å»ºçš„socketå¯¹è±¡ éœ€è¦ç¡®è®¤æ˜¯å¦åˆå§‹åŒ–æˆåŠŸ
         if (WSAStartup(MAKEWORD(2, 2), &wsd) != 0) {
             std::cout << "WSAStartup failure. Error = " << WSAGetLastError() << std::endl;
             return -1;
         }
-        // ´´½¨socket
+        // åˆ›å»ºsocket
         udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if (udp_socket == INVALID_SOCKET) {
             std::cout << "create_socket failure. Error = " << WSAGetLastError() << std::endl;
@@ -27,13 +27,13 @@ private:
         return 0;
     }
 
-    // °ó¶¨socket
+    // ç»‘å®šsocket
     int bind_socket(short port) const {
-        // ´´½¨Ì×½Ó×ÖµØÖ·
+        // åˆ›å»ºå¥—æ¥å­—åœ°å€
         sockaddr_in socket_addr{};
         socket_addr.sin_family = AF_INET;
-        socket_addr.sin_port = htons(port);//¶Ë¿Ú
-        socket_addr.sin_addr.s_addr = inet_addr("127.0.0.1");//¾ßÌåµÄµØÖ·
+        socket_addr.sin_port = htons(port);//ç«¯å£
+        socket_addr.sin_addr.s_addr = inet_addr("127.0.0.1");//å…·ä½“çš„åœ°å€
         if (bind(udp_socket, (sockaddr *) &socket_addr, sizeof(socket_addr)) == SOCKET_ERROR) {
             std::cout << "bind_socket failure. Error = " << WSAGetLastError() << std::endl;
             return -1;
@@ -59,7 +59,7 @@ public:
     }
 
     static sockaddr_in *get_SockAddr_In(const std::string &host, const short port) {
-        // ÅäÖÃÔ¶³ÌÖ÷»úĞÅÏ¢
+        // é…ç½®è¿œç¨‹ä¸»æœºä¿¡æ¯
         auto *socket_addr = new sockaddr_in();
         socket_addr->sin_family = AF_INET;
         socket_addr->sin_port = htons(port);

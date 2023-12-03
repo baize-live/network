@@ -10,7 +10,7 @@
 
 using namespace std;
 
-// Ó¦ÓÃ²ãĞ­Òé
+// åº”ç”¨å±‚åè®®
 class protocol {
 protected:
     map<string, string> headers;
@@ -48,7 +48,7 @@ public:
         string value;
         bool flag = true;
         auto it = buf.cbegin();
-        // ½âÎöheaders
+        // è§£æheaders
         headers.clear();
         for (; it != buf.cend(); ++it) {
             if (*it == '\r') {
@@ -76,7 +76,7 @@ public:
                 value += *it;
             }
         }
-        // ½âÎödata
+        // è§£ædata
         body.resize(0);
         for (; it != buf.cend(); ++it) {
             body.push_back(*it);
@@ -118,7 +118,7 @@ public:
 
     vector<char> get_bytes() {
         vector<char> buf;
-        // ±éÀú headers
+        // éå† headers
         for (const auto &header: headers) {
             string key = header.first;
             string value = header.second;
@@ -134,7 +134,7 @@ public:
         buf.push_back('\r');
         buf.push_back('\n');
 
-        // ±éÀú body
+        // éå† body
         for (const auto &ch: body) {
             buf.push_back(ch);
         }
@@ -147,7 +147,7 @@ public:
 class Response : public protocol {
 public:
     Response() {
-        // ±ê¼ÇĞ­Òé×÷Õß
+        // æ ‡è®°åè®®ä½œè€…
         headers["author"] = "BZ";
     };
 
@@ -160,7 +160,7 @@ public:
     }
 
     void response(RTP_Server &server) {
-        // ·¢ËÍ
+        // å‘é€
         vector<char> out_buf = get_bytes();
         copy(out_buf.begin(), out_buf.end(), temp_buf);
         server.send(temp_buf, (int) out_buf.size());
@@ -170,12 +170,12 @@ public:
 class Request : public protocol {
 public:
     Request() {
-        // ±ê¼ÇĞ­Òé×÷Õß
+        // æ ‡è®°åè®®ä½œè€…
         headers["author"] = "BZ";
     }
 
     explicit Request(map<string, string> &headers) {
-        // ±ê¼ÇĞ­Òé×÷Õß
+        // æ ‡è®°åè®®ä½œè€…
         this->headers["author"] = "BZ";
         for (const auto &header: headers) {
             this->headers[header.first] = header.second;
@@ -190,10 +190,10 @@ public:
         headers["method"] = std::move(method);
     }
 
-    // TODO: ÏÖÔÚ·şÎñ¶ËÎŞÏìÓ¦
+    // TODO: ç°åœ¨æœåŠ¡ç«¯æ— å“åº”
     Response request(RTP_Client &client) {
         Response response;
-        // ·¢ËÍ
+        // å‘é€
         vector<char> out_buf = get_bytes();
         copy(out_buf.begin(), out_buf.end(), temp_buf);
         client.send(temp_buf, (int) out_buf.size());

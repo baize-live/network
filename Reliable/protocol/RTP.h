@@ -15,28 +15,28 @@ using namespace std;
 #define DATA_LEN 10000
 #define DEBUG_RTP
 
-#pragma pack(1)        // ½øÈë×Ö½Ú¶ÔÆë·½Ê½
+#pragma pack(1)        // è¿›å…¥å­—èŠ‚å¯¹é½æ–¹å¼
 
 // 1 Byte
 struct RTP_Flag_t {
-    BYTE ACK: 1;    // È·ÈÏ
-    BYTE SYN: 1;    // ½¨Á¢Á¬½Ó
-    BYTE FIN: 1;    // ¶Ï¿ªÁ¬½Ó
-    BYTE RES1: 5;   // ±£Áô
+    BYTE ACK: 1;    // ç¡®è®¤
+    BYTE SYN: 1;    // å»ºç«‹è¿æ¥
+    BYTE FIN: 1;    // æ–­å¼€è¿æ¥
+    BYTE RES1: 5;   // ä¿ç•™
 };
 
 // 12 Bytes
 struct RTP_Head_t {
-    DWORD send_num;      // ·¢ËÍĞòºÅ
-    DWORD recv_num;      // ½ÓÊÕĞòºÅ
-    WORD check_sum;      // Ğ£ÑéºÍ
-    RTP_Flag_t flag;     // ±êÖ¾Î»
-    BYTE windows_num;    // ´°¿Ú´óĞ¡
+    DWORD send_num;      // å‘é€åºå·
+    DWORD recv_num;      // æ¥æ”¶åºå·
+    WORD check_sum;      // æ ¡éªŒå’Œ
+    RTP_Flag_t flag;     // æ ‡å¿—ä½
+    BYTE windows_num;    // çª—å£å¤§å°
 };
 
 // DATA_LEN Bytes
 struct RTP_Data_t {
-    BYTE data[DATA_LEN]; // Êı¾İÓò
+    BYTE data[DATA_LEN]; // æ•°æ®åŸŸ
 };
 
 // 12 + DATA_LEN Bytes
@@ -45,7 +45,7 @@ struct RTP_Datagram_t {
     RTP_Data_t data;
 };
 
-// ´°¿ÚÊôĞÔ
+// çª—å£å±æ€§
 struct Attribute_t {
     DWORD time;
     DWORD index;
@@ -53,7 +53,7 @@ struct Attribute_t {
     bool flag;
 };
 
-// ·şÎñÆ÷×´Ì¬Ã¶¾Ù
+// æœåŠ¡å™¨çŠ¶æ€æšä¸¾
 enum ServerStatus {
     Server_init = 0,
     Server_listen,
@@ -68,7 +68,7 @@ enum ServerStatus {
     Server_Unknown_Error,
 };
 
-// ¿Í»§¶Ë×´Ì¬Ã¶¾Ù
+// å®¢æˆ·ç«¯çŠ¶æ€æšä¸¾
 enum ClientStatus {
     Client_init = 0,
 
@@ -79,7 +79,7 @@ enum ClientStatus {
 
     Client_Wave_Hands_1,
     Client_Wave_Hands_3,
-    Client_Wave_Hands_5, // µÈ´ıÒ»´ÎÍøÂçÑÓÊ±, Èô×´Ì¬Îª¸Ä±äÔò³É¹¦»ÓÊÖ
+    Client_Wave_Hands_5, // ç­‰å¾…ä¸€æ¬¡ç½‘ç»œå»¶æ—¶, è‹¥çŠ¶æ€ä¸ºæ”¹å˜åˆ™æˆåŠŸæŒ¥æ‰‹
 
     Client_Connected_Close,
 
@@ -88,58 +88,58 @@ enum ClientStatus {
 
 #pragma pack()
 
-// RTP ¿É¿¿´«Êä»ùÀà
+// RTP å¯é ä¼ è¾“åŸºç±»
 class RTP {
-    // Ëæ»úÊı
+    // éšæœºæ•°
     default_random_engine random;
 protected:
-    // UDP ¹¤¾ß
+    // UDP å·¥å…·
     UDP *udp_ptr = new UDP();
-    // connect/accept ÉèÖÃ
+    // connect/accept è®¾ç½®
     sockaddr_in *addr_ptr = nullptr;
-    // ÊÇ·ñÁ¬½Ó Ìá¹©¸øsend ºÍ recv Ê¹ÓÃ
+    // æ˜¯å¦è¿æ¥ æä¾›ç»™send å’Œ recv ä½¿ç”¨
     bool isConnected = false;
-    // Ñ­»·³¬Ê±Ê±¼ä
+    // å¾ªç¯è¶…æ—¶æ—¶é—´
     DWORD sleep_time = 0;
-    // ´°¿Ú´óĞ¡
+    // çª—å£å¤§å°
     DWORD windows_number = 10;
-    // ÍøÂçÑÓ³Ù ³õÊ¼Öµ1s
+    // ç½‘ç»œå»¶è¿Ÿ åˆå§‹å€¼1s
     DWORD network_delay = 1000;
-    // ÉÏ´ÎÎÕÊÖ·¢ËÍµÄÊ±¼ä
+    // ä¸Šæ¬¡æ¡æ‰‹å‘é€çš„æ—¶é—´
     DWORD Shake_Hands_Send_Time = -1;
-    // ½ÓÊÕ/·¢ËÍ»ùÖ·
+    // æ¥æ”¶/å‘é€åŸºå€
     DWORD recv_base = 0;
     DWORD send_base = random() % 100;
-    // ½ÓÊÕ/·¢ËÍĞòºÅ
+    // æ¥æ”¶/å‘é€åºå·
     DWORD recv_number = 0;
     DWORD send_number = send_base;
-    // ·¢ËÍ»º³åÇø
+    // å‘é€ç¼“å†²åŒº
     vector<pair<int, RTP_Data_t>> send_buffers;
-    // ·¢ËÍ»º³åÇø´óĞ¡
+    // å‘é€ç¼“å†²åŒºå¤§å°
     DWORD buffers_number = 0;
     DWORD free_buffer_head = 0;
     DWORD free_buffer_number = 0;
     DWORD valid_buffer_head = 0;
-    // ·¢ËÍ´°¿ÚÊôĞÔ
+    // å‘é€çª—å£å±æ€§
     list<Attribute_t> send_windows_list;
 
-    // ĞÅºÅ¶ÓÁĞ ÓÃÓÚ½ÓÊÕ·¢ËÍÏß³Ì¼äÍ¨ĞÅ
+    // ä¿¡å·é˜Ÿåˆ— ç”¨äºæ¥æ”¶å‘é€çº¿ç¨‹é—´é€šä¿¡
     queue<RTP_Flag_t> signals_queue;
 
-    // ½ÓÊÕ»º³åÇø
+    // æ¥æ”¶ç¼“å†²åŒº
     vector<char> recv_buffers;
     list<pair<int, int>> valid_buffer_index{{0, 0}};
-    // ÊÕ·¢Ïß³Ì
+    // æ”¶å‘çº¿ç¨‹
     thread *thread_send = nullptr;
     thread *thread_recv = nullptr;
     thread *thread_resend = nullptr;
 
-    // ¶Ô¹²ÏíÊı¾İ¼ÓËø
+    // å¯¹å…±äº«æ•°æ®åŠ é”
     mutex send_mutex;
     mutex recv_mutex;
     mutex test_mutex;
 
-    // RTP Ìá¹©¸ø×ÓÀàµÄ½Ó¿Ú
+    // RTP æä¾›ç»™å­ç±»çš„æ¥å£
     int recv_RTP_Datagram(RTP_Datagram_t *RTP_Datagram);
 
     int send_RTP_Signals(RTP_Datagram_t *RTP_Datagram, RTP_Head_t head);
@@ -148,20 +148,20 @@ protected:
 
     void print_RTP_Datagram(RTP_Datagram_t *RTP_Datagram, int len, const string &str);
 
-    // ½ÓÊÕÊı¾İ¼°»º³åÇøµÄ´¦Àí
+    // æ¥æ”¶æ•°æ®åŠç¼“å†²åŒºçš„å¤„ç†
     void handle_recv_Data(RTP_Datagram_t *RTP_Datagram, int len);
 
-    // ·¢ËÍÊı¾İ¼°»º³åÇøµÄ´¦Àí
+    // å‘é€æ•°æ®åŠç¼“å†²åŒºçš„å¤„ç†
     void handle_send_Data(RTP_Datagram_t *RTP_Datagram);
 
-    // ÖØ´«Êı¾İ¼°»º³åÇøµÄ´¦Àí
+    // é‡ä¼ æ•°æ®åŠç¼“å†²åŒºçš„å¤„ç†
     void handle_resend_Data(RTP_Datagram_t *RTP_Datagram);
 
-    // ½ûÖ¹Íâ²¿¹¹½¨
+    // ç¦æ­¢å¤–éƒ¨æ„å»º
     RTP() = default;
 
 public:
-    // RTP Ìá¹©¸øÉÏ²ãµÄ½Ó¿Ú
+    // RTP æä¾›ç»™ä¸Šå±‚çš„æ¥å£
     int recv(char *buf, int len, int timeout = INT32_MAX);
 
     int send(char *buf, int len, int timeout = INT32_MAX);
@@ -177,7 +177,7 @@ public:
 
 class RTP_Server : public RTP {
 private:
-    // ·şÎñ¶Ë×´Ì¬
+    // æœåŠ¡ç«¯çŠ¶æ€
     ServerStatus Status;
 
     void recv_thread();
@@ -194,20 +194,20 @@ public:
     }
 
     int listen() {
-        // Æô¶¯½ÓÊÕºÍ·¢ËÍÏß³Ì
+        // å¯åŠ¨æ¥æ”¶å’Œå‘é€çº¿ç¨‹
         thread_recv = new thread(&RTP_Server::recv_thread, this);
         thread_send = new thread(&RTP_Server::send_thread, this);
         thread_recv->detach();
         thread_send->detach();
-        // ³õÊ¼»¯ ¶Ô·½µØÖ·
+        // åˆå§‹åŒ– å¯¹æ–¹åœ°å€
         addr_ptr = new sockaddr_in();
-        // ·şÎñÆ÷¿ªÊ¼¼àÌı
+        // æœåŠ¡å™¨å¼€å§‹ç›‘å¬
         Status = Server_listen;
         return 0;
     }
 
     int accept() {
-        // ¸ù¾İ×´Ì¬ÅĞ¶Ï ÊÇ·ñÁ¬½Ó³É¹¦
+        // æ ¹æ®çŠ¶æ€åˆ¤æ–­ æ˜¯å¦è¿æ¥æˆåŠŸ
         while (true) {
             switch (Status) {
                 case Server_accept:
@@ -236,7 +236,7 @@ public:
 
 class RTP_Client : public RTP {
 private:
-    // ¿Í»§¶Ë×´Ì¬
+    // å®¢æˆ·ç«¯çŠ¶æ€
     ClientStatus Status;
 
     void recv_thread();
@@ -253,17 +253,17 @@ public:
     }
 
     int connect(const string &host, short port) {
-        // Æô¶¯½ÓÊÕºÍ·¢ËÍÏß³Ì
+        // å¯åŠ¨æ¥æ”¶å’Œå‘é€çº¿ç¨‹
         thread_recv = new thread(&RTP_Client::recv_thread, this);
         thread_send = new thread(&RTP_Client::send_thread, this);
         thread_recv->detach();
         thread_send->detach();
-        // ³õÊ¼»¯
+        // åˆå§‹åŒ–
         addr_ptr = UDP::get_SockAddr_In(host, port);
 
-        // ¿ªÊ¼¼ÆÊ± ³¬Ê±Á¬½ÓÊ§°Ü
+        // å¼€å§‹è®¡æ—¶ è¶…æ—¶è¿æ¥å¤±è´¥
         DWORD start = GetTickCount();
-        // ¸ù¾İ×´Ì¬ÅĞ¶Ï ÊÇ·ñÁ¬½Ó³É¹¦
+        // æ ¹æ®çŠ¶æ€åˆ¤æ–­ æ˜¯å¦è¿æ¥æˆåŠŸ
         while (true) {
             switch (Status) {
                 case Client_init:
@@ -289,10 +289,10 @@ public:
             Sleep(1000);
         }
 
-        // ¿Í»§¶Ë×¼±¸Á¬½Ó
+        // å®¢æˆ·ç«¯å‡†å¤‡è¿æ¥
         Status = Client_Wave_Hands_1;
         DWORD start = GetTickCount();
-        // ¸ù¾İ×´Ì¬ÅĞ¶Ï ÊÇ·ñÁ¬½Ó³É¹¦
+        // æ ¹æ®çŠ¶æ€åˆ¤æ–­ æ˜¯å¦è¿æ¥æˆåŠŸ
         while (true) {
             switch (Status) {
                 case Client_Connected_Close:

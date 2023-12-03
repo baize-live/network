@@ -27,12 +27,12 @@ int isFileOrDir(const std::string &sPath) {
 
 void getMultiLayerDirFromStr(const std::string &str, std::vector<std::string> &vSubDirs) {
     std::string sOriStrCp = str;
-    // ½«Ô­Ê¼×Ö·û´®µÄ"\\"Ìæ»»³É"/"
+    // å°†åŸå§‹å­—ç¬¦ä¸²çš„"\\"æ›¿æ¢æˆ"/"
     sepReplace(sOriStrCp);
-    // ½«×Ö·û´®½øĞĞ·Ö¸î
+    // å°†å­—ç¬¦ä¸²è¿›è¡Œåˆ†å‰²
     std::vector<std::string> vTokenRes;
     strToken(sOriStrCp, '/', vTokenRes);
-    // ½«·Ö¸îºóµÄ½á¹û£¬°´ÕÕÖğ²½ÀÛ¼ÓµÄ·½Ê½£¬´æ´¢µ½vSubDirsÖĞ
+    // å°†åˆ†å‰²åçš„ç»“æœï¼ŒæŒ‰ç…§é€æ­¥ç´¯åŠ çš„æ–¹å¼ï¼Œå­˜å‚¨åˆ°vSubDirsä¸­
     vSubDirs.push_back(vTokenRes.front());
     for (int i = 1; i < (int) vTokenRes.size(); i++) {
         vSubDirs.push_back(vSubDirs[i - 1] + "/" + vTokenRes[i]);
@@ -108,17 +108,17 @@ bool File::touch(const std::string &sFileName) {
     std::string sNewFilePath;
     sNewFilePath = sDirPath + std::string("/") + std::string(sFileName);
 
-    /* _accessº¯ÊıËµÃ÷£º£¨²Î¿¼Á´½Ó£ºhttps://blog.csdn.net/monk1992/article/details/81906013£©
-     * Í·ÎÄ¼ş£º<io.h>
-     * º¯ÊıÔ­ĞÍ£ºint _access(const char *pathname, int mode);
-     * ²ÎÊı£ºpathname ÎªÎÄ¼şÂ·¾¶»òÄ¿Â¼Â·¾¶ mode Îª·ÃÎÊÈ¨ÏŞ£¨ÔÚ²»Í¬ÏµÍ³ÖĞ¿ÉÄÜÓÃ²»ÄÜµÄºê¶¨ÒåÖØĞÂ¶¨Òå£©
-     * ·µ»ØÖµ£ºÈç¹ûÎÄ¼ş¾ßÓĞÖ¸¶¨µÄ·ÃÎÊÈ¨ÏŞ£¬Ôòº¯Êı·µ»Ø0£»Èç¹ûÎÄ¼ş²»´æÔÚ»òÕß²»ÄÜ·ÃÎÊÖ¸¶¨µÄÈ¨ÏŞ£¬Ôò·µ»Ø-1.
-     * ±¸×¢£ºµ±pathnameÎªÎÄ¼şÊ±£¬_accessº¯ÊıÅĞ¶ÏÎÄ¼şÊÇ·ñ´æÔÚ£¬²¢ÅĞ¶ÏÎÄ¼şÊÇ·ñ¿ÉÒÔÓÃmodeÖµÖ¸¶¨µÄÄ£Ê½½øĞĞ·ÃÎÊ¡£µ±pathnameÎªÄ¿Â¼Ê±£¬_accessÖ»ÅĞ¶ÏÖ¸¶¨Ä¿Â¼ÊÇ·ñ´æÔÚ£¬ÔÚWindows NTºÍWindows 2000ÖĞ£¬ËùÓĞµÄÄ¿Â¼¶¼Ö»ÓĞ¶ÁĞ´È¨ÏŞ¡£
-     * modeµÄÖµºÍº¬ÒåÈçÏÂËùÊ¾£º
-     * 00¡ª¡ªÖ»¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
-     * 02¡ª¡ªĞ´È¨ÏŞ
-     * 04¡ª¡ª¶ÁÈ¨ÏŞ
-     * 06¡ª¡ª¶ÁĞ´È¨ÏŞ
+    /* _accesså‡½æ•°è¯´æ˜ï¼šï¼ˆå‚è€ƒé“¾æ¥ï¼šhttps://blog.csdn.net/monk1992/article/details/81906013ï¼‰
+     * å¤´æ–‡ä»¶ï¼š<io.h>
+     * å‡½æ•°åŸå‹ï¼šint _access(const char *pathname, int mode);
+     * å‚æ•°ï¼špathname ä¸ºæ–‡ä»¶è·¯å¾„æˆ–ç›®å½•è·¯å¾„ mode ä¸ºè®¿é—®æƒé™ï¼ˆåœ¨ä¸åŒç³»ç»Ÿä¸­å¯èƒ½ç”¨ä¸èƒ½çš„å®å®šä¹‰é‡æ–°å®šä¹‰ï¼‰
+     * è¿”å›å€¼ï¼šå¦‚æœæ–‡ä»¶å…·æœ‰æŒ‡å®šçš„è®¿é—®æƒé™ï¼Œåˆ™å‡½æ•°è¿”å›0ï¼›å¦‚æœæ–‡ä»¶ä¸å­˜åœ¨æˆ–è€…ä¸èƒ½è®¿é—®æŒ‡å®šçš„æƒé™ï¼Œåˆ™è¿”å›-1.
+     * å¤‡æ³¨ï¼šå½“pathnameä¸ºæ–‡ä»¶æ—¶ï¼Œ_accesså‡½æ•°åˆ¤æ–­æ–‡ä»¶æ˜¯å¦å­˜åœ¨ï¼Œå¹¶åˆ¤æ–­æ–‡ä»¶æ˜¯å¦å¯ä»¥ç”¨modeå€¼æŒ‡å®šçš„æ¨¡å¼è¿›è¡Œè®¿é—®ã€‚å½“pathnameä¸ºç›®å½•æ—¶ï¼Œ_accessåªåˆ¤æ–­æŒ‡å®šç›®å½•æ˜¯å¦å­˜åœ¨ï¼Œåœ¨Windows NTå’ŒWindows 2000ä¸­ï¼Œæ‰€æœ‰çš„ç›®å½•éƒ½åªæœ‰è¯»å†™æƒé™ã€‚
+     * modeçš„å€¼å’Œå«ä¹‰å¦‚ä¸‹æ‰€ç¤ºï¼š
+     * 00â€”â€”åªæ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+     * 02â€”â€”å†™æƒé™
+     * 04â€”â€”è¯»æƒé™
+     * 06â€”â€”è¯»å†™æƒé™
     */
     if (0 != _access(sDirPath.c_str(), 2)) {
         printf("***ERROR***: Dest dir has no writing access.\n");
@@ -146,8 +146,8 @@ bool File::touch(const std::string &sTarDirName, const std::string &sNewFileName
 
     std::string sNewFilePath = sParent;
 
-    // Èç¹ûsNewFileNameÊÇ°üº¬¶à¼¶Ä¿Â¼µÄÎÄ¼ş£¬Èç£ºDirA\\DirB\\DirB\\FileA.txt;
-    // ÔòĞèÒª½«¸ÃÎÄ¼şÂ·¾¶²ğ·Ö¿ª£¬·Ö±ğ´´½¨¶à¼¶Ä¿Â¼£¬ÔÙ´´½¨ÎÄ¼ş
+    // å¦‚æœsNewFileNameæ˜¯åŒ…å«å¤šçº§ç›®å½•çš„æ–‡ä»¶ï¼Œå¦‚ï¼šDirA\\DirB\\DirB\\FileA.txt;
+    // åˆ™éœ€è¦å°†è¯¥æ–‡ä»¶è·¯å¾„æ‹†åˆ†å¼€ï¼Œåˆ†åˆ«åˆ›å»ºå¤šçº§ç›®å½•ï¼Œå†åˆ›å»ºæ–‡ä»¶
 //    if(sNewFileName.find('/') != sNewFileName.npos || sNewFileName.find('\\') != sNewFileName.npos)
 //    {
 //        std::vector<std::string> sSubDirs;
@@ -176,8 +176,8 @@ bool File::copy(const std::string &sTarDirPath) {
         return false;
     }
 
-    /* ½«±¾ÎÄ¼ş¸´ÖÆµ½pTarDirPathÏÂ */
-    // 1. ¶ÁÎÄ¼ş£¬¶ş½øÖÆ·½Ê½´ò¿ª
+    /* å°†æœ¬æ–‡ä»¶å¤åˆ¶åˆ°pTarDirPathä¸‹ */
+    // 1. è¯»æ–‡ä»¶ï¼ŒäºŒè¿›åˆ¶æ–¹å¼æ‰“å¼€
     std::ifstream inFile(m_sFilePath, std::ios::in | std::ios::binary);
     if (!inFile.is_open()) {
         printf("***ERROR***: File open failure.\n");
@@ -185,8 +185,8 @@ bool File::copy(const std::string &sTarDirPath) {
         return false;
     }
 
-    // 2. ÔÚÄ¿±êÎÄ¼ş¼ĞÏÂ´´½¨ĞÂµ±Ç°Í¬ÃûÎÄ¼ş
-    // ¿ÉÒÔ×ö¸öÅĞ¶Ï¸ÃÎÄ¼şÊÇ·ñ´æÔÚ
+    // 2. åœ¨ç›®æ ‡æ–‡ä»¶å¤¹ä¸‹åˆ›å»ºæ–°å½“å‰åŒåæ–‡ä»¶
+    // å¯ä»¥åšä¸ªåˆ¤æ–­è¯¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
     bool touchRes = File::touch(sTarDirPath, this->fileName().c_str());
     if (touchRes == false) {
         printf("***ERROR***: New file created to target dir failed.\n");
@@ -196,7 +196,7 @@ bool File::copy(const std::string &sTarDirPath) {
 
     std::string sNewFilePath = std::string(sTarDirPath) + "/" + this->fileName();
 
-    // 3. ´ò¿ª´´½¨µÄ¸ÃĞÂÎÄ¼ş£¬²¢½«Êı¾İ¸´ÖÆµ½¸ÃÎÄ¼şÖĞ
+    // 3. æ‰“å¼€åˆ›å»ºçš„è¯¥æ–°æ–‡ä»¶ï¼Œå¹¶å°†æ•°æ®å¤åˆ¶åˆ°è¯¥æ–‡ä»¶ä¸­
     std::ofstream outFile(sNewFilePath, std::ios::out | std::ios::binary);
     if (!outFile.is_open()) {
         printf("***ERROR***: Open copied new file failed.\n");
@@ -205,7 +205,7 @@ bool File::copy(const std::string &sTarDirPath) {
         return false;
     }
 
-    outFile << inFile.rdbuf();  // Õâ¾ä»°ÍøÉÏÒ²ÊÇÕâÑùÓÃµÄ£¬ËµËÙ¶ÈºÜ¿ì
+    outFile << inFile.rdbuf();  // è¿™å¥è¯ç½‘ä¸Šä¹Ÿæ˜¯è¿™æ ·ç”¨çš„ï¼Œè¯´é€Ÿåº¦å¾ˆå¿«
 
     inFile.close();
     outFile.close();
@@ -226,7 +226,7 @@ bool File::copy(const std::string &sTarDirName, const std::string &sFilePath) {
         return false;
     }
 
-    // ÔÚÄ¿±êÎÄ¼ş¼ĞÏÂ´´½¨ĞÂÎÄ¼ş
+    // åœ¨ç›®æ ‡æ–‡ä»¶å¤¹ä¸‹åˆ›å»ºæ–°æ–‡ä»¶
     std::string sTarDir = sTarDirName;
     sepReplace(sTarDir);
     File oriFile(sFilePath);
@@ -239,7 +239,7 @@ bool File::copy(const std::string &sTarDirName, const std::string &sFilePath) {
 
     std::string sNewFilePath = sTarDir + "/" + oriFile.fileName();
 
-    // 3. ´ò¿ª´´½¨µÄ¸ÃĞÂÎÄ¼ş£¬²¢½«Êı¾İ¸´ÖÆµ½¸ÃÎÄ¼şÖĞ
+    // 3. æ‰“å¼€åˆ›å»ºçš„è¯¥æ–°æ–‡ä»¶ï¼Œå¹¶å°†æ•°æ®å¤åˆ¶åˆ°è¯¥æ–‡ä»¶ä¸­
     std::ofstream outFile(sNewFilePath, std::ios::out | std::ios::binary);
     if (!outFile.is_open()) {
         printf("***ERROR***: Open copied new file failed.\n");
@@ -248,7 +248,7 @@ bool File::copy(const std::string &sTarDirName, const std::string &sFilePath) {
         return false;
     }
 
-    outFile << inFile.rdbuf();  // Õâ¾ä»°ÍøÉÏÒ²ÊÇÕâÑùÓÃµÄ£¬ËµËÙ¶ÈºÜ¿ì
+    outFile << inFile.rdbuf();  // è¿™å¥è¯ç½‘ä¸Šä¹Ÿæ˜¯è¿™æ ·ç”¨çš„ï¼Œè¯´é€Ÿåº¦å¾ˆå¿«
 
     inFile.close();
     outFile.close();
@@ -279,7 +279,7 @@ bool Dir::mkdir(const std::string &sNewDirName) {
         return false;
     }
 
-    // Èç¹ûsNewDirNameÊÇ¶à¼¶×ÓÄ¿Â¼×é³ÉµÄ£¬Ôò¶ÔÆä½øĞĞ²ğ·Ö´¦Àí
+    // å¦‚æœsNewDirNameæ˜¯å¤šçº§å­ç›®å½•ç»„æˆçš„ï¼Œåˆ™å¯¹å…¶è¿›è¡Œæ‹†åˆ†å¤„ç†
     std::vector<std::string> vSubDirs;
     getMultiLayerDirFromStr(sNewDirName, vSubDirs);
     for (int i = 0; i < (int) vSubDirs.size(); i++) {
@@ -302,7 +302,7 @@ bool Dir::mkdir(const std::string &sTarDirPath, const std::string &sNewDirName) 
         return false;
     }
 
-    // Èç¹ûsNewDirNameÊÇ¶à¼¶×ÓÄ¿Â¼×é³ÉµÄ£¬Ôò¶ÔÆä½øĞĞ²ğ·Ö´¦Àí
+    // å¦‚æœsNewDirNameæ˜¯å¤šçº§å­ç›®å½•ç»„æˆçš„ï¼Œåˆ™å¯¹å…¶è¿›è¡Œæ‹†åˆ†å¤„ç†
     std::vector<std::string> vSubDirs;
     getMultiLayerDirFromStr(sNewDirName, vSubDirs);
     for (int i = 0; i < (int) vSubDirs.size(); i++) {
@@ -335,7 +335,7 @@ FileList Dir::entry_static(const std::string &sDirPath, bool bDeepTraverse) {
 }
 
 bool Dir::copy(const std::string &sTarDirPath) {
-    // ÅĞ¶ÏÄ¿±êÎÄ¼ş¼ĞÊÇ·ñÓĞĞ´È¨ÏŞ
+    // åˆ¤æ–­ç›®æ ‡æ–‡ä»¶å¤¹æ˜¯å¦æœ‰å†™æƒé™
     if (0 != _access(sTarDirPath.c_str(), 2)) {
         printf("***ERROR***: Dest dir path has no writing access.\n");
         return false;
@@ -343,15 +343,15 @@ bool Dir::copy(const std::string &sTarDirPath) {
     auto curFiles = this->entry(true);
     for (auto file: curFiles) {
         if (file->isFile()) {
-            // ½«µ±Ç°ÎÄ¼şµÄÎÄ¼şÂ·¾¶¼õÈ¥µ±Ç°ÎÄ¼ş¼ĞµÄÂ·¾¶£¬µÃµ½µ±Ç°ÎÄ¼şÏà¶Ôµ±Ç°ÎÄ¼ş¼ĞµÄÏà¶ÔÂ·¾¶
+            // å°†å½“å‰æ–‡ä»¶çš„æ–‡ä»¶è·¯å¾„å‡å»å½“å‰æ–‡ä»¶å¤¹çš„è·¯å¾„ï¼Œå¾—åˆ°å½“å‰æ–‡ä»¶ç›¸å¯¹å½“å‰æ–‡ä»¶å¤¹çš„ç›¸å¯¹è·¯å¾„
             std::string sRelPath = getRelativePath(*file, *this);
-            // Ïà¶ÔÂ·¾¶µÄÇ°×º
+            // ç›¸å¯¹è·¯å¾„çš„å‰ç¼€
             std::string sPrefix;
             if (sRelPath.find('/') != sRelPath.npos)
                 sPrefix = sRelPath.substr(0, sRelPath.find_last_of('/'));
             else
                 sPrefix = "";
-            // ÔÚÄ¿±êÄ¿Â¼ÏÂ´´½¨Ïà¶ÔÂ·¾¶µÄÇ°×º
+            // åœ¨ç›®æ ‡ç›®å½•ä¸‹åˆ›å»ºç›¸å¯¹è·¯å¾„çš„å‰ç¼€
             if (sPrefix == "") {
                 File::copy(sTarDirPath, file->filePath());
             } else {
@@ -361,7 +361,7 @@ bool Dir::copy(const std::string &sTarDirPath) {
         }
     }
 
-    // ÄÚ´æ»ØÊÕ ¡ª¡ª curFilesÊÇÔÚentry_staticÖĞ´´½¨µÄ£¬Òò´ËĞèÒªÊÖ¶¯»ØÊÕ
+    // å†…å­˜å›æ”¶ â€”â€” curFilesæ˜¯åœ¨entry_staticä¸­åˆ›å»ºçš„ï¼Œå› æ­¤éœ€è¦æ‰‹åŠ¨å›æ”¶
     while (!curFiles.empty()) {
         auto file = curFiles.front();
         if (file != nullptr) {
@@ -373,7 +373,7 @@ bool Dir::copy(const std::string &sTarDirPath) {
 }
 
 bool Dir::copy(const std::string &sSrcDirPath, const std::string &sTarDirPath) {
-    // ÅĞ¶Ï¶ÔÄ¿±êÎÄ¼ş¼ĞÊÇ·ñÓĞĞ´È¨ÏŞ
+    // åˆ¤æ–­å¯¹ç›®æ ‡æ–‡ä»¶å¤¹æ˜¯å¦æœ‰å†™æƒé™
     if (0 != _access(sTarDirPath.c_str(), 2)) {
         printf("***ERROR***: Dest dir path has no writing access.\n");
         return false;
@@ -381,19 +381,19 @@ bool Dir::copy(const std::string &sSrcDirPath, const std::string &sTarDirPath) {
 
     Dir srcDir(sSrcDirPath);
 
-    // ±éÀúµ±Ç°ÎÄ¼ş¼Ğ£¬µÃµ½ËùÓĞµÄÎÄ¼ş
+    // éå†å½“å‰æ–‡ä»¶å¤¹ï¼Œå¾—åˆ°æ‰€æœ‰çš„æ–‡ä»¶
     auto curFiles = Dir::entry_static(sSrcDirPath, true);
     for (auto file: curFiles) {
         if (file->isFile()) {
-            // ½«µ±Ç°ÎÄ¼şµÄÎÄ¼şÂ·¾¶¼õÈ¥µ±Ç°ÎÄ¼ş¼ĞµÄÂ·¾¶£¬µÃµ½µ±Ç°ÎÄ¼şÏà¶Ôµ±Ç°ÎÄ¼ş¼ĞµÄÏà¶ÔÂ·¾¶
+            // å°†å½“å‰æ–‡ä»¶çš„æ–‡ä»¶è·¯å¾„å‡å»å½“å‰æ–‡ä»¶å¤¹çš„è·¯å¾„ï¼Œå¾—åˆ°å½“å‰æ–‡ä»¶ç›¸å¯¹å½“å‰æ–‡ä»¶å¤¹çš„ç›¸å¯¹è·¯å¾„
             std::string sRelPath = getRelativePath(*file, srcDir);
-            // Ïà¶ÔÂ·¾¶µÄÇ°×º
+            // ç›¸å¯¹è·¯å¾„çš„å‰ç¼€
             std::string sPrefix;
             if (sRelPath.find('/') != sRelPath.npos)
                 sPrefix = sRelPath.substr(0, sRelPath.find_last_of('/'));
             else
                 sPrefix = "";
-            // ÔÚÄ¿±êÄ¿Â¼ÏÂ´´½¨Ïà¶ÔÂ·¾¶µÄÇ°×º
+            // åœ¨ç›®æ ‡ç›®å½•ä¸‹åˆ›å»ºç›¸å¯¹è·¯å¾„çš„å‰ç¼€
             if (sPrefix == "") {
                 File::copy(sTarDirPath, file->filePath());
             } else {
@@ -403,7 +403,7 @@ bool Dir::copy(const std::string &sSrcDirPath, const std::string &sTarDirPath) {
         }
     }
 
-    // ÄÚ´æ»ØÊÕ ¡ª¡ª curFilesÊÇÔÚentry_staticÖĞ´´½¨µÄ£¬Òò´ËĞèÒªÊÖ¶¯»ØÊÕ
+    // å†…å­˜å›æ”¶ â€”â€” curFilesæ˜¯åœ¨entry_staticä¸­åˆ›å»ºçš„ï¼Œå› æ­¤éœ€è¦æ‰‹åŠ¨å›æ”¶
     while (!curFiles.empty()) {
         auto file = curFiles.front();
         if (file != nullptr) {
@@ -421,8 +421,8 @@ void Dir::listFiles(const std::string &sDirPath, FileList &list) {
     std::string sDir = sDirPath;
     sepReplace(sDir);
 
-    std::string sAddWildcardCharacter = sDir + "/*.*";   // ±ØĞë¼ÓÉÏÕâÖÖÍ¨Åä·û£¬·ñÔòÖ»Ñ­»·Ò»´Î
-//    std::string sAddWildcardCharacter = m_sFilePath + "/";    // ÕâÖÖÄ¿Â¼ºó¼ÓĞ±¸ÜµÄ²»ĞĞ£¬»áfindÊ§°Ü
+    std::string sAddWildcardCharacter = sDir + "/*.*";   // å¿…é¡»åŠ ä¸Šè¿™ç§é€šé…ç¬¦ï¼Œå¦åˆ™åªå¾ªç¯ä¸€æ¬¡
+//    std::string sAddWildcardCharacter = m_sFilePath + "/";    // è¿™ç§ç›®å½•ååŠ æ–œæ çš„ä¸è¡Œï¼Œä¼šfindå¤±è´¥
 
     handle = _findfirst(sAddWildcardCharacter.c_str(), &findData);
     if (-1 == handle) {
@@ -453,8 +453,8 @@ void Dir::listFiles_Deep(const std::string &sDirPath, FileList &list) {
     std::string sDir = sDirPath;
     sepReplace(sDir);
 
-    std::string sAddWildcardCharacter = sDir + "/*.*";   // ±ØĞë¼ÓÉÏÕâÖÖÍ¨Åä·û£¬·ñÔòÖ»Ñ­»·Ò»´Î
-//    std::string sAddWildcardCharacter = m_sFilePath + "/";    // ÕâÖÖÄ¿Â¼ºó¼ÓĞ±¸ÜµÄ²»ĞĞ£¬»áfindÊ§°Ü
+    std::string sAddWildcardCharacter = sDir + "/*.*";   // å¿…é¡»åŠ ä¸Šè¿™ç§é€šé…ç¬¦ï¼Œå¦åˆ™åªå¾ªç¯ä¸€æ¬¡
+//    std::string sAddWildcardCharacter = m_sFilePath + "/";    // è¿™ç§ç›®å½•ååŠ æ–œæ çš„ä¸è¡Œï¼Œä¼šfindå¤±è´¥
 
     handle = _findfirst(sAddWildcardCharacter.c_str(), &findData);
     if (-1 == handle) {
