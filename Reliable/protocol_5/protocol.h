@@ -159,11 +159,11 @@ public:
         headers["res"] = std::move(res);
     }
 
-    void response(RTP_Server &server) {
+    void response(RTP_Client &client) {
         // 发送
         vector<char> out_buf = get_bytes();
         copy(out_buf.begin(), out_buf.end(), temp_buf);
-        server.send(temp_buf, (int) out_buf.size());
+        client.send(temp_buf, (int) out_buf.size());
     }
 };
 

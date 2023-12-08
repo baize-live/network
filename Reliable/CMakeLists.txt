@@ -1,12 +1,20 @@
 cmake_minimum_required(VERSION 3.23)
 project(Reliable)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
-add_executable(lab3-server lab3-server.cpp protocol/UDP.h protocol/RTP.h protocol/RTP.cpp protocol/protocol.h utils/FileUtil.h utils/FileUtil.cpp)
-add_executable(lab3-client lab3-client.cpp protocol/UDP.h protocol/RTP.h protocol/RTP.cpp protocol/protocol.h utils/FileUtil.h utils/FileUtil.cpp)
-add_executable(Test test.cpp utils/FileUtil.h utils/FileUtil.cpp)
+link_directories(${PROJECT_SOURCE_DIR}/lib)
 
-target_link_libraries(lab3-server ws2_32)
-target_link_libraries(lab3-client ws2_32)
+SET(RTP_SRC protocol_4/UDP.h protocol_4/RTP.h protocol_4/RTP.cpp)
+
+add_library(RTP SHARED ${RTP_SRC})
+target_link_libraries(RTP ws2_32)
+
+add_executable(lab3-server lab3-server.cpp)
+target_link_libraries(lab3-server ws2_32 RTP)
+
+add_executable(lab3-client lab3-client.cpp)
+target_link_libraries(lab3-client ws2_32 RTP)
+
+add_executable(Test test.cpp)
 

@@ -1,39 +1,28 @@
 #include <fstream>
 
-#include "protocol/RTP.h"
-#include "protocol/protocol.h"
-#include "utils/FileUtil.h"
+#include "protocol_4/RTP.h"
 
 const short port = 2000;
 #define buffer_len DATA_LEN
 
-int main() {
-    RTP_Server server;
-    server.server(port);
-    server.listen();
-    if (server.accept() != 0) {
-        cout << "server start failure... " << endl;
-        return 0;
-    }
-    cout << "server start success... " << endl;
-
+void handle(RTP_Client *client) {
     char buf[buffer_len];
-    int len = server.recv(buf, buffer_len);
 
-    Request request;
-    request.set_bytes(buf, len);
-    string fileName = request.get_header("fileName");
-    int fileSize = stoi(request.get_header("fileSize"));
+    // 接收文件大小和文件名
+    client->recv(buf, buffer_len);
+    int fileSize;
+    int fileNameSize;
+    memcpy(&fileSize, buf, 4);
+    memcpy(&fileNameSize, buf + 4, 4);
+    string fileName(fileNameSize, ' ');
+    copy(buf + 8, buf + 8 + fileNameSize, fileName.begin());
 
-    File file("../recv/" + fileName);
-
-    cout << "开始接收 " << file.fileName() << " 大小: " << fileSize << endl;
-
-    std::ofstream outFile(file.filePath(), std::ios::out | std::ios::binary | std::ios::app);
-
-    int sum = 0;
+    // 接收文件
+    cout << "开始接收 " << fileName << " 大小: " << fileSize << endl;
+    std::ofstream outFile("../recv/" + fileName, std::ios::out | std::ios::binary | std::ios::app);
+    int len, sum = 0;
     while (true) {
-        len = server.recv(buf, buffer_len);
+        len = client->recv(buf, buffer_len);
         if (len == -1) {
             break;
         }
@@ -44,9 +33,21 @@ int main() {
         }
     }
 
-    cout << "接收成功 " << file.fileName() << endl;
-
+    cout << "接收成功 " << fileName << endl;
     outFile.close();
+}
 
-    system("pause");
+int main() {
+    RTP_Server server;
+    server.server(port);
+    server.listen();
+    cout << "server start success... " << endl;
+
+    int num = 0;
+    while (true) {
+        auto client = server.accept();
+        thread t(&handle, client);
+        t.detach();
+        num++;
+    }
 }

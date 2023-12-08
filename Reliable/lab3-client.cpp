@@ -1,8 +1,6 @@
 #include <fstream>
 
-#include "protocol/RTP.h"
-#include "protocol/protocol.h"
-#include "utils/FileUtil.h"
+#include "protocol_4/RTP.h"
 
 const short port = 2000;
 const string host = "127.0.0.1";
@@ -10,52 +8,41 @@ const string host = "127.0.0.1";
 
 int main() {
     RTP_Client client;
-    client.client();
+    client.init();
     if (client.connect(host, port) != 0) {
         cout << "client start failure... " << endl;
         return 0;
     }
     cout << "client start success... " << endl;
 
-    int fileNum = 1;
-    FileList fileList = Dir::entry_static("../send/");
-    for (auto &file: fileList) {
-        cout << fileNum++ << ". " << file->fileName() << endl;
-    }
-    cout << "请选择一个文件.." << endl;
-
-    cin >> fileNum;
-    if (fileNum > fileList.size()) {
-        cout << "文件选择失败 " << endl;
-        return 0;
-    }
-    auto it = fileList.begin();
-    for (; it != fileList.end(); ++it) {
-        if (--fileNum == 0) {
-            break;
-        }
-    }
-    File file = **it;
-
-    cout << "开始发送 " << file.fileName() << " 大小: " << file.fileSize() << endl;
-
-    // 先发送 文件大小和文件名
-    Request request;
-    request.set_header("fileSize", to_string(file.fileSize()));
-    request.set_header("fileName", file.fileName());
-    request.request(client);
-
-    // 然后发送 文件本体
-    std::ifstream inFile(file.filePath(), std::ios::in | std::ios::binary);
-
-    if (!inFile.is_open()) {
-        printf("***ERROR***: Open file failure.\n");
-        inFile.close();
-    }
-
+    // 发送Buf
     char buf[buffer_len];
-    int sum = File::fileSize(file.filePath());
+
+    cout << "请输入文件名(默认为 send 目录下文件): ";
+    string fileName;
+    cin >> fileName;
+    std::ifstream inFile("../send/" + fileName, std::ios::in | std::ios::binary);
+    if (!inFile.is_open()) {
+        cout << "文件打开异常" << endl;
+        exit(-1);
+    }
+    inFile.seekg(0, ios::end);
+    int fileSize = (int) inFile.tellg();
+
+    // 1. 发送文件大小和文件名
+    int fileNameSize = (int) fileName.size();
+    memcpy(buf, &fileSize, 4);
+    memcpy(buf + 4, &fileNameSize, 4);
+    memcpy(buf + 8, fileName.c_str(), fileNameSize);
+    client.send(buf, fileNameSize + 8);
+
+    // 2. 发送文件本体
+    cout << "开始发送 " << fileName << " 大小: " << fileSize << endl;
+    inFile.seekg(0, ios::beg);
+
+    int sum = fileSize;
     int len, now = 0;
+    // 计时开始
     DWORD start = GetTickCount();
     while (now < sum) {
         len = (sum - now) < buffer_len ? (sum - now) : buffer_len;
@@ -63,15 +50,14 @@ int main() {
         client.send(buf, len);
         now += len;
     }
-
+    // 计时结束
     DWORD end = GetTickCount();
-    cout << "发送成功 " << file.fileName() << endl;
-    cout << "用时: " << end - start << "ms" << endl;
-    cout << "平均吞吐率: " << sum * 1.0 / (end - start) << endl;
-
     inFile.close();
-    if (client.close() == 0) {
-        cout << "挥手成功" << endl;
-    }
+    // 统计
+    cout << "发送成功 " << fileName << endl;
+    cout << "用时: " << (end - start) * 1.0 / 1000 << "ms" << endl;
+    cout << "平均吞吐率: " << sum * 1.0 / (end - start) << "KB/s" << endl;
+
+    client.close();
 
 }
